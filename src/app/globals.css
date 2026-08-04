@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+:root {
+  /* Light mode — "Paper" */
+  --bg: #F5F3EE;
+  --bg-elevated: #FFFFFF;
+  --fg: #12141A;
+  --fg-muted: #5C6068;
+  --border: #DEDAD0;
+  --accent-signal: #3B6FE0;
+  --accent-circuit: #1F9D63;
+  --accent-warn: #C97A2B;
+  --accent-danger: #D4483C;
+}
+
+.dark {
+  /* Dark mode — "Ink" */
+  --bg: #0B0E14;
+  --bg-elevated: #12151D;
+  --fg: #F2F1ED;
+  --fg-muted: #8A8F98;
+  --border: #22262F;
+  --accent-signal: #5B8DEF;
+  --accent-circuit: #7BE0AD;
+  --accent-warn: #F2A65A;
+  --accent-danger: #F2685C;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-border: var(--border);
+  --color-signal: var(--accent-signal);
+  --color-circuit: var(--accent-circuit);
+  --color-warn: var(--accent-warn);
+  --color-danger: var(--accent-danger);
+
+  /* Fallback system stacks (swap for next/font vars in an environment with
+     Google Fonts access — see README "Fonts" section) */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::selection {
+  background: var(--accent-signal);
+  color: white;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+/* Keyboard focus visibility */
+:focus-visible {
+  outline: 2px solid var(--accent-signal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mono utility for status chips / version numbers */
+.font-mono-tight {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: -0.01em;
+}
