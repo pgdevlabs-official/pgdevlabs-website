@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getApps, getProjects, getBlogPosts } from "@/lib/dataService";
 
-const baseUrl = "https://pgdevlabs.example.com";
+const baseUrl = "https://pgdevlabs-website.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [apps, projects, blogPosts] = await Promise.all([
