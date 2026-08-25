@@ -8,15 +8,20 @@ export function AppCard({ app }: { app: App }) {
   return (
     <Link
       href={`/apps/${app.slug}`}
-      className="group block rounded-lg border border-border bg-bg-elevated p-5 transition-all hover:border-fg-muted hover:-translate-y-0.5"
+      className="glow-card group block rounded-xl border border-border bg-bg-elevated p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-signal/10 font-display text-lg font-bold text-signal">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-display text-lg font-bold text-white transition-transform duration-300 group-hover:scale-105"
+            style={{
+              background: "linear-gradient(135deg, var(--accent-signal), var(--accent-magenta))",
+            }}
+          >
             {app.name.charAt(0)}
           </div>
           <div>
-            <h3 className="font-display text-base font-semibold group-hover:text-signal">
+            <h3 className="font-display text-base font-semibold transition-colors group-hover:text-signal">
               {app.name}
             </h3>
             <p className="text-sm text-fg-muted">{app.tagline}</p>

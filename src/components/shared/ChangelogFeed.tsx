@@ -19,15 +19,17 @@ export function ChangelogFeed({ apps }: { apps: App[] }) {
     .slice(0, 6);
 
   return (
-    <div className="w-full overflow-hidden rounded-lg border border-border bg-bg-elevated shadow-xl">
+    <div className="glow-card w-full overflow-hidden rounded-xl border border-border bg-bg-elevated shadow-2xl shadow-black/20">
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <div className="flex gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-danger/60" />
           <span className="h-2.5 w-2.5 rounded-full bg-warn/60" />
           <span className="h-2.5 w-2.5 rounded-full bg-circuit/60" />
         </div>
-        <span className="ml-2 font-mono-tight text-xs text-fg-muted">
-          pgdevlabs/releases — live
+        <span className="ml-2 flex items-center gap-1.5 font-mono-tight text-xs text-fg-muted">
+          pgdevlabs/releases
+          <span className="relative h-1.5 w-1.5 rounded-full bg-circuit pulse-dot" />
+          live
         </span>
       </div>
       <div className="p-4">
