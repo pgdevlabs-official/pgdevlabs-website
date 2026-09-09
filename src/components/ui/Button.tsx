@@ -21,12 +21,12 @@ type ButtonAsLink = BaseProps & {
 type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-medium rounded-md transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
+  "inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
 
 const variants = {
-  primary: "bg-signal text-white hover:brightness-110",
-  secondary: "bg-bg-elevated text-fg border border-border hover:border-fg-muted",
-  ghost: "bg-transparent text-fg hover:bg-bg-elevated",
+  primary: "bg-gradient-to-r from-signal to-violet text-white shadow-lg shadow-signal/20 hover:brightness-110",
+  secondary: "bg-bg-elevated text-fg border border-border hover:border-fg-muted hover:bg-white/5",
+  ghost: "bg-transparent text-fg hover:bg-white/5",
 };
 
 const sizes = {

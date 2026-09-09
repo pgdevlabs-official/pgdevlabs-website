@@ -1,165 +1,312 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Bot,
+  BrainCircuit,
+  ChevronRight,
+  Play,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { AppCard } from "@/components/shared/AppCard";
-import { ChangelogFeed } from "@/components/shared/ChangelogFeed";
-import { MeshBackground } from "@/components/shared/MeshBackground";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
-import { getApps } from "@/lib/dataService";
 
-export const dynamic = "force-dynamic";
+const metrics = [
+  { label: "AI automations", value: "18.4k" },
+  { label: "Active agents", value: "9.2k" },
+  { label: "Avg. ROI", value: "3.8x" },
+];
 
-export default async function HomePage() {
-  const apps = await getApps();
-  const featuredApps = apps.slice(0, 3);
-  const shippedCount = apps.filter((a) => a.status === "SHIPPED").length;
-  const totalDownloads = apps.reduce((sum, a) => sum + a.downloadCount, 0);
-  const totalDownloadsK = Math.round(totalDownloads / 100) / 10;
+const featureCards = [
+  {
+    icon: BrainCircuit,
+    title: "Model orchestration",
+    text: "Route prompts, tools, and workflows across your stack with real-time optimization and memory-aware execution.",
+  },
+  {
+    icon: BarChart3,
+    title: "Live analytics",
+    text: "Track usage, conversion, latency, and model performance from one decision-ready control layer.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Enterprise-grade trust",
+    text: "Built with secure infrastructure, guardrails, usage limits, and transparent observability for production teams.",
+  },
+];
 
-  const tickerItems = [
-    ...apps.map((a) => `${a.name} · v${a.versions[0]?.version} shipped`),
-    "always building something",
-    "bugs fixed in public",
-    `${shippedCount} apps live right now`,
-  ];
+const usageBars = [
+  { label: "Inference lift", value: 92 },
+  { label: "Automation sync", value: 78 },
+  { label: "Decision speed", value: 96 },
+];
 
+const productTiles = [
+  { title: "Agent launchpad", subtitle: "8 active flows", accent: "lime" },
+  { title: "Ops cockpit", subtitle: "4.2s p95 latency", accent: "violet" },
+  { title: "Signal monitor", subtitle: "99.98% uptime", accent: "blue" },
+];
+
+export default function HomePage() {
   return (
-    <div className="overflow-hidden">
-      {/* Hero */}
-      <section className="relative">
-        <MeshBackground />
-        <div className="relative z-10 mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6 sm:pt-28">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
-            <div>
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-bg-elevated/80 px-3 py-1.5 font-mono-tight text-xs text-fg-muted backdrop-blur-sm">
-                <span className="relative h-1.5 w-1.5 rounded-full bg-circuit pulse-dot" />
-                {shippedCount} apps shipped and counting
-              </div>
-              <h1 className="font-display text-5xl font-bold leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl">
-                We ship apps.
-                <br />
-                <span className="gradient-text gradient-text-animate">
-                  Not pitch decks.
-                </span>
-              </h1>
-              <p className="mt-7 max-w-lg text-base text-fg-muted sm:text-lg">
-                PGDevLabs is a small studio building real, working software —
-                expense trackers, productivity tools, and whatever else needs
-                building. Every release logged. Every bug owned.
-              </p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <Button href="/apps" size="lg" className="shadow-lg shadow-signal/20">
-                  Browse Apps <ArrowRight size={16} />
-                </Button>
-                <Button href="/about" variant="secondary" size="lg">
-                  <Sparkles size={15} /> About the studio
-                </Button>
-              </div>
+    <main className="ai-landing-shell">
+      <section className="hero-panel">
+        <div className="ambient ambient-one" />
+        <div className="ambient ambient-two" />
+        <div className="ambient ambient-three" />
+
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <div className="eyebrow-row">
+              <span className="eyebrow-badge">
+                <span className="dot" />
+                Ship AI products faster
+              </span>
             </div>
 
-            <ChangelogFeed apps={apps} />
-          </div>
-        </div>
+            <h1 className="hero-title">
+              Power the next
+              <span className="hero-gradient">generation of AI</span>
+              product teams.
+            </h1>
 
-        {/* Marquee ticker */}
-        <div className="relative z-10 border-y border-border bg-bg-elevated/60 py-3 backdrop-blur-sm">
-          <div className="overflow-hidden">
-            <div className="marquee-track">
-              {[...tickerItems, ...tickerItems].map((item, i) => (
-                <span
-                  key={i}
-                  className="flex items-center gap-2 whitespace-nowrap px-6 font-mono-tight text-xs text-fg-muted"
-                >
-                  <span className="h-1 w-1 rounded-full bg-signal" />
-                  {item}
-                </span>
+            <p className="hero-text">
+              PGDevLabs builds premium AI infrastructure, automation layers, and SaaS experiences that turn raw models into operating systems for modern businesses.
+            </p>
+
+            <div className="hero-actions">
+              <Button href="/apps" size="lg" className="premium-button">
+                Explore platform <ArrowRight size={16} />
+              </Button>
+              <Button href="/about" variant="secondary" size="lg" className="secondary-button">
+                <Play size={15} /> Watch demo
+              </Button>
+            </div>
+
+            <div className="trust-row">
+              {metrics.map((metric) => (
+                <div key={metric.label} className="trust-pill">
+                  <span>{metric.value}</span>
+                  <small>{metric.label}</small>
+                </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Stats strip */}
-      <section className="bg-bg-elevated">
-        <div className="mx-auto grid max-w-6xl grid-cols-3 divide-x divide-border px-4 py-10 sm:px-6">
-          <Stat value={<AnimatedCounter target={shippedCount} />} label="Apps shipped" />
-          <Stat
-            value={<AnimatedCounter target={totalDownloadsK} suffix="k+" />}
-            label="Total downloads"
-          />
-          <Stat value={<AnimatedCounter target={4.5} duration={1} />} label="Avg. rating" />
-        </div>
-      </section>
+          <div className="hero-visual">
+            <div className="dashboard-shell glass-panel">
+              <div className="dashboard-topbar">
+                <div className="window-dots">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className="topbar-pill">Live Ops</div>
+              </div>
 
-      {/* Featured apps */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <div className="mb-10 flex items-end justify-between">
-          <div>
-            <p className="font-mono-tight text-xs uppercase tracking-wide text-signal">
-              Featured
-            </p>
-            <h2 className="mt-1 font-display text-3xl font-bold sm:text-4xl">
-              What we&apos;re building
-            </h2>
-          </div>
-          <Link
-            href="/apps"
-            className="hidden items-center gap-1 text-sm font-medium text-fg-muted hover:text-fg sm:flex"
-          >
-            View all <ArrowRight size={14} />
-          </Link>
-        </div>
+              <div className="dashboard-grid">
+                <div className="metric-card metric-primary glass-panel">
+                  <div className="metric-meta">
+                    <span className="meta-label">Pipeline velocity</span>
+                    <span className="trend-up">
+                      <TrendingUp size={12} /> 28.4%
+                    </span>
+                  </div>
+                  <div className="metric-value">
+                    <AnimatedCounter target={92} suffix="%" />
+                  </div>
+                  <div className="mini-chart">
+                    <span style={{ height: "32%" }} />
+                    <span style={{ height: "55%" }} />
+                    <span style={{ height: "47%" }} />
+                    <span style={{ height: "76%" }} />
+                    <span style={{ height: "92%" }} />
+                    <span style={{ height: "68%" }} />
+                    <span style={{ height: "100%" }} />
+                  </div>
+                </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredApps.map((app) => (
-            <AppCard key={app.id} app={app} />
-          ))}
-        </div>
+                <div className="metric-card secondary glass-panel">
+                  <span className="meta-label">Agent health</span>
+                  <div className="ring-wrap">
+                    <div className="ring">
+                      <span>94</span>
+                    </div>
+                  </div>
+                </div>
 
-        <Link
-          href="/apps"
-          className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-fg-muted hover:text-fg sm:hidden"
-        >
-          View all apps <ArrowRight size={14} />
-        </Link>
-      </section>
+                <div className="metric-card tertiary glass-panel">
+                  <span className="meta-label">Workflow score</span>
+                  <div className="stacked-metrics">
+                    <div>
+                      <strong>1.2M</strong>
+                      <small>Tasks</small>
+                    </div>
+                    <div>
+                      <strong>7.8s</strong>
+                      <small>Cycle</small>
+                    </div>
+                  </div>
+                </div>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-        <div className="glow-card relative overflow-hidden rounded-2xl border border-border bg-bg-elevated px-6 py-14 text-center sm:px-12">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-40"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 0%, rgba(91,141,239,0.25), transparent 60%)",
-            }}
-          />
-          <div className="relative">
-            <h2 className="font-display text-3xl font-bold sm:text-4xl">
-              Got an idea worth shipping?
-            </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm text-fg-muted sm:text-base">
-              We&apos;re always open to talking about what to build next.
-            </p>
-            <div className="mt-7">
-              <Button href="/contact" size="lg">
-                Get in touch
-              </Button>
+                <div className="metric-card large glass-panel">
+                  <div className="panel-header">
+                    <span className="meta-label">Realtime signals</span>
+                    <span className="signal-online">Online</span>
+                  </div>
+
+                  <div className="bars-list">
+                    {usageBars.map((bar) => (
+                      <div key={bar.label} className="bar-row">
+                        <span>{bar.label}</span>
+                        <div className="bar-track">
+                          <div className="bar-fill" style={{ width: `${bar.value}%` }} />
+                        </div>
+                        <strong>{bar.value}%</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
-    </div>
+
+      <section className="short-stats" aria-label="Platform proof points">
+        <div className="section-intro proof-intro">
+          <span className="section-number">01</span>
+          <div>
+            <p className="section-kicker">Signal over noise</p>
+            <p className="section-note">The operating layer behind every launch.</p>
+          </div>
+        </div>
+        <div className="stat-grid">
+          <div className="stat-block">
+            <span className="stat-label">Launch velocity</span>
+            <strong><AnimatedCounter target={4.8} decimals={1} />x</strong>
+          </div>
+          <div className="stat-block">
+            <span className="stat-label">Models wired</span>
+            <strong>32</strong>
+          </div>
+          <div className="stat-block">
+            <span className="stat-label">SLA coverage</span>
+            <strong>99.98%</strong>
+          </div>
+        </div>
+      </section>
+
+      <section className="features-section" id="platform">
+        <div className="section-heading">
+          <div>
+            <span className="section-number">02</span>
+            <p className="section-kicker">Built for ambitious teams</p>
+            <h2>One operating layer for AI execution.</h2>
+            <p className="section-description">From first prompt to production workflow, keep the important work in one clear command layer.</p>
+          </div>
+          <Link href="/apps" className="inline-link">
+            Explore apps <ChevronRight size={15} />
+          </Link>
+        </div>
+
+        <div className="feature-grid">
+          {featureCards.map(({ icon: Icon, title, text }) => (
+            <article key={title} className="feature-card glass-panel">
+              <div className="feature-icon">
+                <Icon size={18} />
+              </div>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="bento-section" id="system">
+        <div className="section-intro">
+          <span className="section-number">03</span>
+          <div>
+            <p className="section-kicker">Inside the system</p>
+            <p className="section-note">A closer look at the signals your team can act on.</p>
+          </div>
+        </div>
+        <div className="bento-grid">
+          <article className="bento-card tall glass-panel">
+            <div className="bento-header">
+              <div>
+                <p className="mini-tag">System overview</p>
+                <h3>AI command center</h3>
+              </div>
+              <Sparkles size={17} />
+            </div>
+            <div className="command-tiles">
+              {productTiles.map((tile) => (
+                <div key={tile.title} className={`command-tile ${tile.accent}`}>
+                  <strong>{tile.title}</strong>
+                  <span>{tile.subtitle}</span>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="bento-card glass-panel">
+            <div className="bento-header compact">
+              <div>
+                <p className="mini-tag">Autonomy</p>
+                <h3>Task completion</h3>
+              </div>
+              <Zap size={16} />
+            </div>
+            <div className="progress-ring">
+              <div className="ring-small">
+                <span>86%</span>
+              </div>
+            </div>
+          </article>
+
+          <article className="bento-card glass-panel">
+            <div className="bento-header compact">
+              <div>
+                <p className="mini-tag">Signals</p>
+                <h3>Response accuracy</h3>
+              </div>
+              <Bot size={16} />
+            </div>
+            <ul className="signal-list">
+              <li>
+                <span className="signal-dot lime" />
+                96.3% answer quality
+              </li>
+              <li>
+                <span className="signal-dot blue" />
+                74ms routing latency
+              </li>
+              <li>
+                <span className="signal-dot violet" />
+                12 integrations live
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section className="cta-section" id="contact">
+        <div className="cta-panel glass-panel">
+          <div className="cta-copy">
+            <span className="section-number">04</span>
+            <p className="section-kicker">Ready to launch</p>
+            <h2>Turn AI ambition into a product people trust.</h2>
+          </div>
+          <Button href="/contact" size="lg" className="premium-button">
+            Book a strategy call <ArrowRight size={16} />
+          </Button>
+        </div>
+      </section>
+    </main>
   );
 }
 
-function Stat({ value, label }: { value: React.ReactNode; label: string }) {
-  return (
-    <div className="px-4 text-center first:pl-0 last:pr-0 sm:text-left">
-      <p className="font-display text-3xl font-bold sm:text-4xl">{value}</p>
-      <p className="mt-1 font-mono-tight text-xs uppercase tracking-wide text-fg-muted">
-        {label}
-      </p>
-    </div>
-  );
-}

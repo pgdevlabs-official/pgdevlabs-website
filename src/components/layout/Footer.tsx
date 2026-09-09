@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Terminal, Code2, AtSign } from "lucide-react";
+import { AtSign, Code2, Terminal } from "lucide-react";
 
 const columns = [
   {
@@ -30,36 +30,38 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-bg-elevated">
+    <footer className="border-t border-border/70 bg-black/10">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-          <div className="col-span-2 sm:col-span-1">
+        <div className="grid gap-8 md:grid-cols-4">
+          <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 font-display text-base font-semibold">
-              <Terminal size={16} className="text-signal" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-signal to-violet text-white">
+                <Terminal size={15} />
+              </span>
               PGDevLabs
             </Link>
-            <p className="mt-3 text-sm text-fg-muted">
-              A small studio shipping real apps.
+            <p className="mt-4 max-w-xs text-sm leading-6 text-fg-muted">
+              A small studio shipping sharp products that feel premium, useful, and worth keeping.
             </p>
-            <div className="mt-4 flex gap-3">
-              <a href="#" aria-label="GitHub" className="text-fg-muted hover:text-fg">
-                <Code2 size={16} />
+            <div className="mt-5 flex gap-3">
+              <a href="#" aria-label="GitHub" className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/5 text-fg-muted transition-colors hover:text-fg">
+                <Code2 size={15} />
               </a>
-              <a href="#" aria-label="Twitter" className="text-fg-muted hover:text-fg">
-                <AtSign size={16} />
+              <a href="#" aria-label="Twitter" className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/5 text-fg-muted transition-colors hover:text-fg">
+                <AtSign size={15} />
               </a>
             </div>
           </div>
 
           {columns.map((col) => (
             <div key={col.title}>
-              <h4 className="font-mono-tight text-[11px] uppercase tracking-wide text-fg-muted">
+              <h4 className="font-mono-tight text-[11px] uppercase tracking-[0.14em] text-fg-muted">
                 {col.title}
               </h4>
-              <ul className="mt-3 space-y-2">
+              <ul className="mt-4 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-fg-muted hover:text-fg">
+                    <Link href={link.href} className="text-sm text-fg-muted transition-colors hover:text-fg">
                       {link.label}
                     </Link>
                   </li>
@@ -74,7 +76,7 @@ export function Footer() {
             © {new Date().getFullYear()} PGDevLabs. All rights reserved.
           </p>
           <p className="font-mono-tight text-xs text-fg-muted">
-            build <span className="text-circuit">passing</span>
+            build <span className="text-circuit">smarter</span>
           </p>
         </div>
       </div>

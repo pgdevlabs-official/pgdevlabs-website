@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, Terminal } from "lucide-react";
+import { Menu, Terminal, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { cn } from "@/lib/utils";
@@ -21,10 +21,12 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur-md">
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-bg/75 backdrop-blur-xl">
+      <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
-          <Terminal size={18} className="text-signal" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-signal to-violet text-white shadow-lg shadow-signal/20">
+            <Terminal size={16} />
+          </span>
           PGDevLabs
         </Link>
 
@@ -34,8 +36,10 @@ export function Navbar() {
               key={link.href}
               href={link.href}
               className={cn(
-                "rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                pathname === link.href ? "text-fg" : "text-fg-muted hover:text-fg"
+                "rounded-full px-3 py-2 text-sm font-medium transition-all duration-200",
+                pathname === link.href
+                  ? "bg-white/5 text-fg shadow-inner shadow-white/5"
+                  : "text-fg-muted hover:bg-white/5 hover:text-fg"
               )}
             >
               {link.label}
@@ -50,22 +54,22 @@ export function Navbar() {
           <ThemeToggle />
           <Link
             href="/apps"
-            className="hidden rounded-md bg-signal px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110 sm:inline-flex"
+            className="hidden rounded-full bg-gradient-to-r from-signal to-violet px-4 py-2 text-sm font-medium text-white shadow-lg shadow-signal/20 transition-all hover:brightness-110 sm:inline-flex"
           >
             Browse Apps
           </Link>
           <button
-            className="text-fg-muted md:hidden"
+            className="rounded-full border border-border bg-white/5 p-2 text-fg-muted md:hidden"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </nav>
 
       {mobileOpen && (
-        <div className="border-t border-border px-4 py-3 md:hidden">
+        <div className="border-t border-border bg-bg/80 px-4 py-3 md:hidden backdrop-blur-xl">
           <div className="mb-3">
             <CommandPalette />
           </div>
@@ -75,7 +79,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2 text-sm font-medium text-fg-muted hover:bg-bg-elevated hover:text-fg"
+                className="rounded-xl px-3 py-2 text-sm font-medium text-fg-muted hover:bg-white/5 hover:text-fg"
               >
                 {link.label}
               </Link>

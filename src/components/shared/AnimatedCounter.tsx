@@ -7,10 +7,12 @@ export function AnimatedCounter({
   target,
   suffix = "",
   duration = 1.4,
+  decimals = 0,
 }: {
   target: number;
   suffix?: string;
   duration?: number;
+  decimals?: number;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
@@ -18,18 +20,23 @@ export function AnimatedCounter({
 
   useEffect(() => {
     if (!inView) return;
+
     let start: number | null = null;
     let raf: number;
+    const factor = 10 ** decimals;
+
     function step(ts: number) {
       if (start === null) start = ts;
       const progress = Math.min((ts - start) / (duration * 1000), 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.floor(eased * target));
+      const nextValue = (eased * target * factor) / factor;
+      setDisplay(Number(nextValue.toFixed(decimals)));
       if (progress < 1) raf = requestAnimationFrame(step);
     }
+
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [inView, target, duration]);
+  }, [inView, target, duration, decimals]);
 
   return (
     <motion.span
