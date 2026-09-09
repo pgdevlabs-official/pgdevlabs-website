@@ -9,10 +9,10 @@ import { CommandPalette } from "@/components/shared/CommandPalette";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/apps", label: "Apps" },
-  { href: "/projects", label: "Projects" },
+  { href: "/apps", label: "Products" },
+  { href: "/projects", label: "Work" },
   { href: "/blog", label: "Blog" },
-  { href: "/team", label: "Team" },
+  { href: "/downloads", label: "Downloads" },
   { href: "/about", label: "About" },
 ];
 
@@ -56,7 +56,7 @@ export function Navbar() {
             href="/apps"
             className="hidden rounded-full bg-gradient-to-r from-signal to-violet px-4 py-2 text-sm font-medium text-white shadow-lg shadow-signal/20 transition-all hover:brightness-110 sm:inline-flex"
           >
-            Browse Apps
+            View my work
           </Link>
           <button
             className="rounded-full border border-border bg-white/5 p-2 text-fg-muted md:hidden"

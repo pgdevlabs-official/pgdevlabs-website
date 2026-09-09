@@ -12,15 +12,15 @@ import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: {
-    default: "PGDevLabs — A small studio shipping real apps",
+    default: "PGDevLabs — Independent developer studio",
     template: "%s | PGDevLabs",
   },
   description:
-    "PGDevLabs builds and ships production-ready apps: expense tracking, productivity tools, and more. Browse apps, download APKs, and follow the build log.",
+    "PGDevLabs is an independent developer studio building useful apps, thoughtful interfaces, and reliable digital products.",
   metadataBase: new URL("https://pgdevlabs.example.com"),
   openGraph: {
-    title: "PGDevLabs",
-    description: "A small studio shipping real apps.",
+    title: "PGDevLabs — Independent developer studio",
+    description: "Useful apps, thoughtful interfaces, and reliable digital products.",
     type: "website",
   },
   manifest: "/manifest.json",

@@ -12,42 +12,41 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 
 const metrics = [
-  { label: "AI automations", value: "18.4k" },
-  { label: "Active agents", value: "9.2k" },
-  { label: "Avg. ROI", value: "3.8x" },
+  { label: "Products shipped", value: "12+" },
+  { label: "Years building", value: "06" },
+  { label: "Ideas shipped", value: "∞" },
 ];
 
 const featureCards = [
   {
     icon: BrainCircuit,
-    title: "Model orchestration",
-    text: "Route prompts, tools, and workflows across your stack with real-time optimization and memory-aware execution.",
+    title: "Product engineering",
+    text: "From a rough idea to a polished, production-ready product with thoughtful UX and reliable engineering underneath.",
   },
   {
     icon: BarChart3,
-    title: "Live analytics",
-    text: "Track usage, conversion, latency, and model performance from one decision-ready control layer.",
+    title: "Full-stack delivery",
+    text: "Web apps, mobile experiences, APIs, and dashboards that work together as one coherent product system.",
   },
   {
     icon: ShieldCheck,
-    title: "Enterprise-grade trust",
-    text: "Built with secure infrastructure, guardrails, usage limits, and transparent observability for production teams.",
+    title: "Built to be useful",
+    text: "Every project starts with a real user problem, then gets shaped into something fast, clear, and worth coming back to.",
   },
 ];
 
 const usageBars = [
-  { label: "Inference lift", value: 92 },
-  { label: "Automation sync", value: 78 },
-  { label: "Decision speed", value: 96 },
+  { label: "TypeScript", value: 92 },
+  { label: "React / Next", value: 96 },
+  { label: "Product thinking", value: 88 },
 ];
 
 const productTiles = [
-  { title: "Agent launchpad", subtitle: "8 active flows", accent: "lime" },
-  { title: "Ops cockpit", subtitle: "4.2s p95 latency", accent: "violet" },
-  { title: "Signal monitor", subtitle: "99.98% uptime", accent: "blue" },
+  { title: "KharchaMate", subtitle: "Expense tracking app", accent: "lime" },
+  { title: "PGDevLabs web", subtitle: "Studio platform", accent: "violet" },
+  { title: "New experiments", subtitle: "Always in progress", accent: "blue" },
 ];
 
 export default function HomePage() {
@@ -63,26 +62,25 @@ export default function HomePage() {
             <div className="eyebrow-row">
               <span className="eyebrow-badge">
                 <span className="dot" />
-                Ship AI products faster
+                Independent developer studio
               </span>
             </div>
 
             <h1 className="hero-title">
-              Power the next
-              <span className="hero-gradient">generation of AI</span>
-              product teams.
+              I build digital
+              <span className="hero-gradient">products that ship.</span>
             </h1>
 
             <p className="hero-text">
-              PGDevLabs builds premium AI infrastructure, automation layers, and SaaS experiences that turn raw models into operating systems for modern businesses.
+              PGDevLabs is an independent developer studio creating useful apps, thoughtful interfaces, and the systems that make them feel effortless.
             </p>
 
             <div className="hero-actions">
               <Button href="/apps" size="lg" className="premium-button">
-                Explore platform <ArrowRight size={16} />
+                See products <ArrowRight size={16} />
               </Button>
               <Button href="/about" variant="secondary" size="lg" className="secondary-button">
-                <Play size={15} /> Watch demo
+                <Play size={15} /> How I work
               </Button>
             </div>
 
@@ -104,19 +102,19 @@ export default function HomePage() {
                   <span />
                   <span />
                 </div>
-                <div className="topbar-pill">Live Ops</div>
+                <div className="topbar-pill">Developer console</div>
               </div>
 
               <div className="dashboard-grid">
                 <div className="metric-card metric-primary glass-panel">
                   <div className="metric-meta">
-                    <span className="meta-label">Pipeline velocity</span>
+                    <span className="meta-label">Build velocity</span>
                     <span className="trend-up">
                       <TrendingUp size={12} /> 28.4%
                     </span>
                   </div>
                   <div className="metric-value">
-                    <AnimatedCounter target={92} suffix="%" />
+                    12 shipped
                   </div>
                   <div className="mini-chart">
                     <span style={{ height: "32%" }} />
@@ -130,32 +128,32 @@ export default function HomePage() {
                 </div>
 
                 <div className="metric-card secondary glass-panel">
-                  <span className="meta-label">Agent health</span>
+                    <span className="meta-label">Current focus</span>
                   <div className="ring-wrap">
                     <div className="ring">
-                      <span>94</span>
+                      <span>06</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="metric-card tertiary glass-panel">
-                  <span className="meta-label">Workflow score</span>
+                    <span className="meta-label">Stack in use</span>
                   <div className="stacked-metrics">
                     <div>
-                      <strong>1.2M</strong>
-                      <small>Tasks</small>
+                      <strong>TS</strong>
+                      <small>Core</small>
                     </div>
                     <div>
-                      <strong>7.8s</strong>
-                      <small>Cycle</small>
+                      <strong>Next</strong>
+                      <small>Web</small>
                     </div>
                   </div>
                 </div>
 
                 <div className="metric-card large glass-panel">
                   <div className="panel-header">
-                    <span className="meta-label">Realtime signals</span>
-                    <span className="signal-online">Online</span>
+                    <span className="meta-label">What I bring to a build</span>
+                    <span className="signal-online">In progress</span>
                   </div>
 
                   <div className="bars-list">
@@ -180,22 +178,22 @@ export default function HomePage() {
         <div className="section-intro proof-intro">
           <span className="section-number">01</span>
           <div>
-            <p className="section-kicker">Signal over noise</p>
-            <p className="section-note">The operating layer behind every launch.</p>
+            <p className="section-kicker">A small track record</p>
+            <p className="section-note">Real products, shipped with care.</p>
           </div>
         </div>
         <div className="stat-grid">
           <div className="stat-block">
-            <span className="stat-label">Launch velocity</span>
-            <strong><AnimatedCounter target={4.8} decimals={1} />x</strong>
+            <span className="stat-label">Products shipped</span>
+            <strong>12+</strong>
           </div>
           <div className="stat-block">
-            <span className="stat-label">Models wired</span>
-            <strong>32</strong>
+            <span className="stat-label">Technologies used</span>
+            <strong>20+</strong>
           </div>
           <div className="stat-block">
-            <span className="stat-label">SLA coverage</span>
-            <strong>99.98%</strong>
+            <span className="stat-label">Curiosity level</span>
+            <strong>100%</strong>
           </div>
         </div>
       </section>
@@ -204,12 +202,12 @@ export default function HomePage() {
         <div className="section-heading">
           <div>
             <span className="section-number">02</span>
-            <p className="section-kicker">Built for ambitious teams</p>
-            <h2>One operating layer for AI execution.</h2>
-            <p className="section-description">From first prompt to production workflow, keep the important work in one clear command layer.</p>
+            <p className="section-kicker">How I build</p>
+            <h2>Good ideas deserve good execution.</h2>
+            <p className="section-description">I care about the full journey: understanding the problem, shaping the interface, writing the code, and getting the product into people&apos;s hands.</p>
           </div>
           <Link href="/apps" className="inline-link">
-            Explore apps <ChevronRight size={15} />
+            See my work <ChevronRight size={15} />
           </Link>
         </div>
 
@@ -230,16 +228,16 @@ export default function HomePage() {
         <div className="section-intro">
           <span className="section-number">03</span>
           <div>
-            <p className="section-kicker">Inside the system</p>
-            <p className="section-note">A closer look at the signals your team can act on.</p>
+            <p className="section-kicker">The workbench</p>
+            <p className="section-note">A glimpse into what is being built.</p>
           </div>
         </div>
         <div className="bento-grid">
           <article className="bento-card tall glass-panel">
             <div className="bento-header">
               <div>
-                <p className="mini-tag">System overview</p>
-                <h3>AI command center</h3>
+                <p className="mini-tag">Selected work</p>
+                <h3>Projects in motion</h3>
               </div>
               <Sparkles size={17} />
             </div>
@@ -256,14 +254,14 @@ export default function HomePage() {
           <article className="bento-card glass-panel">
             <div className="bento-header compact">
               <div>
-                <p className="mini-tag">Autonomy</p>
-                <h3>Task completion</h3>
+                <p className="mini-tag">Craft</p>
+                <h3>Details matter</h3>
               </div>
               <Zap size={16} />
             </div>
             <div className="progress-ring">
               <div className="ring-small">
-                <span>86%</span>
+                <span>100%</span>
               </div>
             </div>
           </article>
@@ -271,23 +269,23 @@ export default function HomePage() {
           <article className="bento-card glass-panel">
             <div className="bento-header compact">
               <div>
-                <p className="mini-tag">Signals</p>
-                <h3>Response accuracy</h3>
+                <p className="mini-tag">Workflow</p>
+                <h3>From idea to launch</h3>
               </div>
               <Bot size={16} />
             </div>
             <ul className="signal-list">
               <li>
                 <span className="signal-dot lime" />
-                96.3% answer quality
+                Idea to interface
               </li>
               <li>
                 <span className="signal-dot blue" />
-                74ms routing latency
+                Design to code
               </li>
               <li>
                 <span className="signal-dot violet" />
-                12 integrations live
+                Code to production
               </li>
             </ul>
           </article>
@@ -298,8 +296,8 @@ export default function HomePage() {
         <div className="cta-panel glass-panel">
           <div className="cta-copy">
             <span className="section-number">04</span>
-            <p className="section-kicker">Ready to launch</p>
-            <h2>Turn AI ambition into a product people trust.</h2>
+            <p className="section-kicker">Have a thing to build?</p>
+            <h2>Let&apos;s make something people enjoy using.</h2>
           </div>
           <Button href="/contact" size="lg" className="premium-button">
             Book a strategy call <ArrowRight size={16} />
