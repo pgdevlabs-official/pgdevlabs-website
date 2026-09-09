@@ -12,6 +12,10 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { AppCard } from "@/components/shared/AppCard";
+import { ProjectCard } from "@/components/shared/ProjectCard";
+import { BlogCard } from "@/components/shared/BlogCard";
+import { getApps, getBlogPosts, getProjects } from "@/lib/dataService";
 
 const metrics = [
   { label: "Products shipped", value: "12+" },
@@ -49,7 +53,19 @@ const productTiles = [
   { title: "New experiments", subtitle: "Always in progress", accent: "blue" },
 ];
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const [apps, projects, posts] = await Promise.all([
+    getApps(),
+    getProjects(),
+    getBlogPosts(),
+  ]);
+
+  const latestPosts = [...posts].sort(
+    (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  ).slice(0, 2);
+
   return (
     <main className="ai-landing-shell">
       <section className="hero-panel">
@@ -224,9 +240,52 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="work-section" id="work">
+        <div className="section-heading">
+          <div>
+            <span className="section-number">03</span>
+            <p className="section-kicker">Shipped and shipping</p>
+            <h2>Work that exists outside the browser tab.</h2>
+            <p className="section-description">Explore the apps, tools, and experiments behind PGDevLabs. Every card leads to the real story.</p>
+          </div>
+          <Link href="/apps" className="inline-link">
+            View everything <ChevronRight size={15} />
+          </Link>
+        </div>
+
+        <div className="work-grid">
+          <div className="work-column">
+            <div className="work-column-heading">
+              <span>Products</span>
+              <Link href="/apps">All apps <ArrowRight size={13} /></Link>
+            </div>
+            {apps.slice(0, 2).map((app) => <AppCard key={app.id} app={app} />)}
+          </div>
+          <div className="work-column">
+            <div className="work-column-heading">
+              <span>Open projects</span>
+              <Link href="/projects">All projects <ArrowRight size={13} /></Link>
+            </div>
+            {projects.slice(0, 2).map((project) => <ProjectCard key={project.id} project={project} />)}
+          </div>
+        </div>
+
+        {latestPosts.length > 0 && (
+          <div className="build-log-row">
+            <div>
+              <p className="section-kicker">Build log</p>
+              <h3>Notes from the messy middle.</h3>
+            </div>
+            <div className="build-log-list">
+              {latestPosts.map((post) => <BlogCard key={post.id} post={post} />)}
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="bento-section" id="system">
         <div className="section-intro">
-          <span className="section-number">03</span>
+          <span className="section-number">04</span>
           <div>
             <p className="section-kicker">The workbench</p>
             <p className="section-note">A glimpse into what is being built.</p>
@@ -295,7 +354,7 @@ export default function HomePage() {
       <section className="cta-section" id="contact">
         <div className="cta-panel glass-panel">
           <div className="cta-copy">
-            <span className="section-number">04</span>
+            <span className="section-number">05</span>
             <p className="section-kicker">Have a thing to build?</p>
             <h2>Let&apos;s make something people enjoy using.</h2>
           </div>
