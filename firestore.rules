@@ -69,11 +69,9 @@ service cloud.firestore {
         && resource.data.status == 'available'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reservedOrderId'])
         && request.resource.data.status == 'reserved'
-        && existsAfter(textOrderPath(orderId))
         && order.buyerId == request.auth.uid
         && order.status == 'awaiting_payment'
         && itemId in order.itemIds
-        && existsAfter(textOrderItemPath(orderId, itemId))
         && orderItem.itemId == itemId
         && orderItem.sellerId == resource.data.sellerId
         && get(profilePath(resource.data.sellerId)).data.marketplaceSuspended != true
@@ -91,11 +89,9 @@ service cloud.firestore {
         && resource.data.status == 'available'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reservedOrderId'])
         && request.resource.data.status == 'reserved'
-        && existsAfter(textOrderPath(orderId))
         && order.buyerId == request.auth.uid
         && order.status == 'awaiting_payment'
         && itemId in order.itemIds
-        && existsAfter(textOrderItemPath(orderId, itemId))
         && orderItem.itemId == itemId
         && orderItem.sellerId == resource.data.sellerId
         && get(profilePath(resource.data.sellerId)).data.marketplaceSuspended != true
