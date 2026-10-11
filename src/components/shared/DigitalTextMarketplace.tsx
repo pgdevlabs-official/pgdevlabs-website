@@ -53,7 +53,9 @@ function errorMessage(error: unknown) {
     if (error.code === "auth/weak-password") return "Choose a password with at least 6 characters.";
     if (error.code === "auth/invalid-email") return "Enter a valid email address.";
     if (error.code === "auth/network-request-failed") return "Network error. Check your internet connection and try again.";
-    if (error.code === "firestore/permission-denied") return "Firebase blocked this action. Confirm the latest Firestore rules are deployed and your email is verified.";
+    if (error.code === "permission-denied" || error.code === "firestore/permission-denied") {
+      return "Firebase rejected this action. Refresh listings and sign in with a verified buyer account. If it continues, ask the administrator to redeploy the Firestore rules.";
+    }
   }
   return error instanceof Error ? error.message : "The request could not be completed.";
 }

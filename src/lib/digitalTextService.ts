@@ -40,6 +40,7 @@ const collections = {
 const maximumTextLength = 20_000;
 const maximumCartItems = 8;
 const screenshotLimit = 600_000;
+const reservationClockSkewAllowanceMs = 5_000;
 const configuredAdminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "prashantraj93345@gmail.com").toLowerCase();
 
 export interface DigitalTextPricing {
@@ -270,7 +271,7 @@ export async function createDigitalTextOrder(itemIds: string[]) {
       throw new Error("One or more selected items are unavailable. Refresh the listings.");
     }
     const total = Math.round(customerPrice * itemIds.length * 100) / 100;
-    const expiresAt = Date.now() + reservationMinutes * 60 * 1000;
+    const expiresAt = Date.now() + reservationMinutes * 60 * 1000 - reservationClockSkewAllowanceMs;
     transaction.set(orderRef, {
       buyerId: user.uid,
       buyerName: profile.name,
