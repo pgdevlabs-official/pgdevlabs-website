@@ -3,13 +3,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
   onAuthStateChanged,
-  signInWithEmailAndPassword,
   signOut,
   type User,
 } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 import { Lock, LogOut } from "lucide-react";
 import { auth } from "@/lib/firebaseConfig";
 import { Button } from "@/components/ui/Button";
+import { loginMarketplaceUser } from "@/lib/marketplaceService";
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "";
 
@@ -46,13 +47,19 @@ export function AdminGate({ children }: { children: ReactNode }) {
     }
     setSubmitting(true);
     try {
-      const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
-      if (ADMIN_EMAIL && cred.user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      const signedInUser = await loginMarketplaceUser(email.trim(), password);
+      if (signedInUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
         await signOut(auth);
         setError("This account isn't authorized for admin access.");
       }
-    } catch {
-      setError("Incorrect email or password.");
+    } catch (reason) {
+      if (reason instanceof FirebaseError && reason.code === "auth/invalid-credential") {
+        setError("Email or password is incorrect.");
+      } else if (reason instanceof FirebaseError && reason.code === "permission-denied") {
+        setError("Firebase blocked admin profile setup. Confirm the deployed Firestore rules allow the configured admin email.");
+      } else {
+        setError(reason instanceof Error ? reason.message : "Admin sign-in failed.");
+      }
     } finally {
       setSubmitting(false);
       setPassword("");
