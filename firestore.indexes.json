@@ -1,0 +1,93 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "marketplaceProducts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "marketplaceProducts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "marketplaceOrders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "buyerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "marketplaceOrders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "marketplaceOrders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "digitalTextCatalog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "digitalTextItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "digitalTextSales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "digitalTextSales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "payoutStatus", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "digitalTextRejections",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "digitalTextOrders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "buyerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

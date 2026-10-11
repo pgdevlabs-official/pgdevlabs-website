@@ -22,6 +22,10 @@ export function AdminGate({ children }: { children: ReactNode }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!auth) {
+      setChecking(false);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setChecking(false);
@@ -32,6 +36,14 @@ export function AdminGate({ children }: { children: ReactNode }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!ADMIN_EMAIL) {
+      setError("Admin access is disabled until NEXT_PUBLIC_ADMIN_EMAIL is configured.");
+      return;
+    }
+    if (!auth) {
+      setError("Configure Firebase keys in .env.local before signing in.");
+      return;
+    }
     setSubmitting(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -55,14 +67,16 @@ export function AdminGate({ children }: { children: ReactNode }) {
     );
   }
 
-  const isAuthorized = user && (!ADMIN_EMAIL || user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+  const isAuthorized = Boolean(
+    user && ADMIN_EMAIL && user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+  );
 
   if (isAuthorized) {
     return (
       <div>
         <div className="mx-auto flex max-w-6xl items-center justify-end px-4 pt-4 sm:px-6">
           <button
-            onClick={() => signOut(auth)}
+            onClick={() => auth && signOut(auth)}
             className="flex items-center gap-1.5 font-mono-tight text-xs text-fg-muted hover:text-fg"
           >
             <LogOut size={13} /> Sign out ({user?.email})
@@ -80,7 +94,9 @@ export function AdminGate({ children }: { children: ReactNode }) {
       </div>
       <h1 className="mt-4 font-display text-xl font-semibold">Admin access</h1>
       <p className="mt-1 text-sm text-fg-muted">
-        Sign in with your admin account to continue.
+        {ADMIN_EMAIL
+          ? "Sign in with your configured admin account to continue."
+          : "Admin access is disabled. Configure NEXT_PUBLIC_ADMIN_EMAIL in .env.local and restart the server."}
       </p>
       <form onSubmit={handleSubmit} className="mt-6 w-full space-y-3">
         <input

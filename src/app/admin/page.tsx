@@ -8,6 +8,7 @@ import { MiniBarChart } from "@/components/shared/MiniBarChart";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { AdminContentManager } from "@/components/shared/admin/AdminContentManager";
+import { DigitalTextAdminPanel } from "@/components/shared/DigitalTextAdminPanel";
 import { formatCompactNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -151,6 +152,10 @@ export default async function AdminPage() {
               <AdminContentManager />
             </Suspense>
           </ErrorBoundary>
+        </div>
+
+        <div className="mt-10">
+          <DigitalTextAdminPanel />
         </div>
       </div>
     </AdminGate>

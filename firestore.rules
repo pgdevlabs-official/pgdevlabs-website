@@ -1,0 +1,576 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profilePath(uid) {
+      return /databases/$(database)/documents/marketplaceUsers/$(uid);
+    }
+
+    function isConfiguredAdmin() {
+      return signedIn()
+        && request.auth.token.email == 'prashantraj93345@gmail.com';
+    }
+
+    function isAdmin() {
+      return isConfiguredAdmin()
+        || (signedIn()
+          && exists(profilePath(request.auth.uid))
+          && get(profilePath(request.auth.uid)).data.role == 'admin');
+    }
+
+    function hasMarketplaceRole() {
+      return isAdmin()
+        || (signedIn()
+        && exists(profilePath(request.auth.uid))
+        && get(profilePath(request.auth.uid)).data.role in ['buyer', 'seller', 'both', 'admin']);
+    }
+
+    function orderPath(orderId) {
+      return /databases/$(database)/documents/marketplaceOrders/$(orderId);
+    }
+
+    function paymentProofPath(orderId) {
+      return /databases/$(database)/documents/marketplacePaymentProofs/$(orderId);
+    }
+
+    function verifiedMarketplaceUser() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && exists(profilePath(request.auth.uid))
+        && get(profilePath(request.auth.uid)).data.marketplaceSuspended != true;
+    }
+
+    function textPricingPath() {
+      return /databases/$(database)/documents/digitalTextSettings/pricing;
+    }
+
+    function textCatalogPath(itemId) {
+      return /databases/$(database)/documents/digitalTextCatalog/$(itemId);
+    }
+
+    function textOrderPath(orderId) {
+      return /databases/$(database)/documents/digitalTextOrders/$(orderId);
+    }
+
+    function textOrderItemPath(orderId, itemId) {
+      return /databases/$(database)/documents/digitalTextOrders/$(orderId)/items/$(itemId);
+    }
+
+    function reservesTextItem(itemId) {
+      let orderId = request.resource.data.reservedOrderId;
+      let order = getAfter(textOrderPath(orderId)).data;
+      let orderItem = getAfter(textOrderItemPath(orderId, itemId)).data;
+      let pricing = get(textPricingPath()).data;
+      return verifiedMarketplaceUser()
+        && get(profilePath(request.auth.uid)).data.role in ['buyer', 'both']
+        && resource.data.status == 'available'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reservedOrderId'])
+        && request.resource.data.status == 'reserved'
+        && existsAfter(textOrderPath(orderId))
+        && order.buyerId == request.auth.uid
+        && order.status == 'awaiting_payment'
+        && itemId in order.itemIds
+        && existsAfter(textOrderItemPath(orderId, itemId))
+        && orderItem.itemId == itemId
+        && orderItem.sellerId == resource.data.sellerId
+        && get(profilePath(resource.data.sellerId)).data.marketplaceSuspended != true
+        && get(profilePath(resource.data.sellerId)).data.role in ['seller', 'both', 'admin']
+        && orderItem.customerPrice == pricing.customerPrice
+        && orderItem.sellerEarning == pricing.sellerEarning;
+    }
+
+    function reservesPrivateTextItem(itemId) {
+      let orderId = request.resource.data.reservedOrderId;
+      let order = getAfter(textOrderPath(orderId)).data;
+      let orderItem = getAfter(textOrderItemPath(orderId, itemId)).data;
+      return verifiedMarketplaceUser()
+        && get(profilePath(request.auth.uid)).data.role in ['buyer', 'both']
+        && resource.data.status == 'available'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reservedOrderId'])
+        && request.resource.data.status == 'reserved'
+        && existsAfter(textOrderPath(orderId))
+        && order.buyerId == request.auth.uid
+        && order.status == 'awaiting_payment'
+        && itemId in order.itemIds
+        && existsAfter(textOrderItemPath(orderId, itemId))
+        && orderItem.itemId == itemId
+        && orderItem.sellerId == resource.data.sellerId
+        && get(profilePath(resource.data.sellerId)).data.marketplaceSuspended != true
+        && get(profilePath(resource.data.sellerId)).data.role in ['seller', 'both', 'admin'];
+    }
+
+    function releasesTextItem() {
+      let orderId = resource.data.reservedOrderId;
+      let nextOrder = getAfter(textOrderPath(orderId)).data;
+      return isAdmin()
+        && resource.data.status == 'reserved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reservedOrderId'])
+        && request.resource.data.status == 'available'
+        && request.resource.data.reservedOrderId == ''
+        && existsAfter(textOrderPath(orderId))
+        && nextOrder.status in ['rejected', 'expired'];
+    }
+
+    function confirmsTextItem(itemId) {
+      let orderId = resource.data.reservedOrderId;
+      let nextOrder = getAfter(textOrderPath(orderId)).data;
+      let orderItem = get(textOrderItemPath(orderId, itemId)).data;
+      return isAdmin()
+        && resource.data.status == 'reserved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'buyerId', 'soldOrderId', 'soldAt'
+        ])
+        && request.resource.data.status == 'sold'
+        && request.resource.data.soldOrderId == orderId
+        && request.resource.data.buyerId == nextOrder.buyerId
+        && existsAfter(textOrderPath(orderId))
+        && nextOrder.status == 'confirmed'
+        && itemId in nextOrder.itemIds
+        && orderItem.itemId == itemId;
+    }
+
+    function confirmsPublicTextItem(itemId) {
+      let orderId = resource.data.reservedOrderId;
+      let nextOrder = getAfter(textOrderPath(orderId)).data;
+      let orderItem = get(textOrderItemPath(orderId, itemId)).data;
+      return isAdmin()
+        && resource.data.status == 'reserved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'sold'
+        && request.resource.data.reservedOrderId == orderId
+        && existsAfter(textOrderPath(orderId))
+        && nextOrder.status == 'confirmed'
+        && itemId in nextOrder.itemIds
+        && orderItem.itemId == itemId;
+    }
+
+    function reservesOrder(productId) {
+      let orderId = request.resource.data.reservedOrderIds[request.resource.data.reservedOrderIds.size() - 1];
+      return signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'reservedOrderIds'])
+        && request.resource.data.reservedOrderIds.size() == resource.data.reservedOrderIds.size() + 1
+        && request.resource.data.reservedOrderIds.hasAll(resource.data.reservedOrderIds)
+        && existsAfter(orderPath(orderId))
+        && request.resource.data.stock == resource.data.stock - getAfter(orderPath(orderId)).data.quantity
+        && getAfter(orderPath(orderId)).data.productId == productId
+        && getAfter(orderPath(orderId)).data.buyerId == request.auth.uid
+        && getAfter(orderPath(orderId)).data.status == 'awaiting_payment';
+    }
+
+    function releasesOrder(productId) {
+      let orderId = request.resource.data.lastReleasedOrderId;
+      return signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'reservedOrderIds', 'lastReleasedOrderId'])
+        && request.resource.data.reservedOrderIds.size() == resource.data.reservedOrderIds.size() - 1
+        && resource.data.reservedOrderIds.hasAll(request.resource.data.reservedOrderIds)
+        && resource.data.reservedOrderIds.hasAny([orderId])
+        && !request.resource.data.reservedOrderIds.hasAny([orderId])
+        && request.resource.data.stock == resource.data.stock + getAfter(orderPath(orderId)).data.quantity
+        && get(orderPath(orderId)).data.productId == productId
+        && get(orderPath(orderId)).data.status in ['awaiting_payment', 'payment_review']
+        && ((getAfter(orderPath(orderId)).data.status == 'expired'
+            && request.time.toMillis() >= get(orderPath(orderId)).data.expiresAt
+            && (get(orderPath(orderId)).data.buyerId == request.auth.uid
+              || get(orderPath(orderId)).data.sellerId == request.auth.uid))
+          || (getAfter(orderPath(orderId)).data.status == 'rejected' && isAdmin()));
+    }
+
+    function completesOrder(productId) {
+      let orderId = request.resource.data.lastReleasedOrderId;
+      return isAdmin()
+        && resource.data.reservedOrderIds.size() > 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reservedOrderIds', 'lastReleasedOrderId'])
+        && request.resource.data.reservedOrderIds.size() == resource.data.reservedOrderIds.size() - 1
+        && resource.data.reservedOrderIds.hasAll(request.resource.data.reservedOrderIds)
+        && resource.data.reservedOrderIds.hasAny([orderId])
+        && !request.resource.data.reservedOrderIds.hasAny([orderId])
+        && existsAfter(orderPath(orderId))
+        && get(orderPath(orderId)).data.productId == productId
+        && get(orderPath(orderId)).data.status == 'payment_review'
+        && getAfter(orderPath(orderId)).data.status == 'confirmed';
+    }
+
+    match /marketplaceUsers/{uid} {
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['id', 'name', 'email', 'role', 'createdAt'])
+        && request.resource.data.id == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && (request.resource.data.role in ['buyer', 'seller', 'both']
+          || (request.resource.data.role == 'admin' && isConfiguredAdmin()));
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow update: if signedIn()
+        && (isAdmin() || (
+          request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'payoutQrUrl'])
+          && (!('payoutQrUrl' in request.resource.data)
+            || (request.resource.data.payoutQrUrl is string
+              && request.resource.data.payoutQrUrl.size() <= 250000))
+        ));
+      allow delete: if isAdmin();
+    }
+
+    match /marketplaceProducts/{productId} {
+      allow read: if (resource.data.active == true && hasMarketplaceRole())
+        || (signedIn() && resource.data.sellerId == request.auth.uid)
+        || isAdmin();
+      allow create: if signedIn()
+        && (isAdmin() || get(profilePath(request.auth.uid)).data.role in ['seller', 'both'])
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.seller == get(profilePath(request.auth.uid)).data.name
+        && request.resource.data.keys().hasOnly([
+          'sellerId', 'seller', 'name', 'category', 'unitPrice', 'stock',
+          'description', 'image', 'active', 'reservedOrderIds',
+          'lastReleasedOrderId', 'createdAt'
+        ])
+        && request.resource.data.unitPrice is number
+        && request.resource.data.unitPrice > 0
+        && request.resource.data.stock is int
+        && request.resource.data.stock >= 0
+        && request.resource.data.image is string
+        && request.resource.data.image.size() <= 250000
+        && request.resource.data.reservedOrderIds is list
+        && request.resource.data.reservedOrderIds.size() == 0
+        && request.resource.data.lastReleasedOrderId == '';
+      allow update: if isAdmin() || (
+        signedIn()
+        && resource.data.sellerId == request.auth.uid
+        && get(profilePath(request.auth.uid)).data.role in ['seller', 'both']
+        && request.resource.data.sellerId == resource.data.sellerId
+        && request.resource.data.unitPrice is number
+        && request.resource.data.unitPrice > 0
+        && request.resource.data.stock is int
+        && request.resource.data.stock >= 0
+        && request.resource.data.image is string
+        && request.resource.data.image.size() <= 250000
+        && request.resource.data.reservedOrderIds == resource.data.reservedOrderIds
+      ) || (request.resource.data.reservedOrderIds.size() > 0 && reservesOrder(productId))
+        || releasesOrder(productId)
+        || completesOrder(productId);
+      allow delete: if isAdmin() || (signedIn() && resource.data.sellerId == request.auth.uid);
+    }
+
+    match /marketplaceOrders/{orderId} {
+      allow create: if signedIn()
+        && hasMarketplaceRole()
+        && get(profilePath(request.auth.uid)).data.role in ['buyer', 'both']
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.status == 'awaiting_payment'
+        && request.resource.data.payoutStatus == 'pending'
+        && request.resource.data.expiresAt is int
+        && request.resource.data.expiresAt > request.time.toMillis()
+        && request.resource.data.expiresAt <= request.time.toMillis() + 300000
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity > 0
+        && request.resource.data.total == request.resource.data.unitPrice * request.resource.data.quantity
+        && exists(/databases/$(database)/documents/marketplaceProducts/$(request.resource.data.productId))
+        && get(/databases/$(database)/documents/marketplaceProducts/$(request.resource.data.productId)).data.active == true
+        && get(/databases/$(database)/documents/marketplaceProducts/$(request.resource.data.productId)).data.stock >= request.resource.data.quantity
+        && get(/databases/$(database)/documents/marketplaceProducts/$(request.resource.data.productId)).data.sellerId == request.resource.data.sellerId
+        && get(/databases/$(database)/documents/marketplaceProducts/$(request.resource.data.productId)).data.unitPrice == request.resource.data.unitPrice
+        && request.resource.data.sellerName == get(/databases/$(database)/documents/marketplaceProducts/$(request.resource.data.productId)).data.seller
+        && request.resource.data.buyerName == get(profilePath(request.auth.uid)).data.name
+        && request.resource.data.buyerEmail == request.auth.token.email
+        && request.resource.data.keys().hasOnly([
+          'productId', 'productName', 'sellerId', 'sellerName',
+          'buyerId', 'buyerName', 'buyerEmail', 'unitPrice', 'quantity', 'total',
+          'note', 'status', 'payoutStatus', 'expiresAt', 'createdAt'
+        ]);
+      allow read: if isAdmin()
+        || (signedIn() && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid));
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.buyerId == request.auth.uid
+          && resource.data.status == 'awaiting_payment'
+          && request.resource.data.status in ['payment_review', 'expired']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && ((request.resource.data.status == 'expired'
+              && request.time.toMillis() >= resource.data.expiresAt)
+            || (request.resource.data.status == 'payment_review'
+              && existsAfter(paymentProofPath(orderId))
+              && getAfter(paymentProofPath(orderId)).data.buyerId == request.auth.uid
+              && request.time.toMillis() < resource.data.expiresAt)));
+      allow delete: if isAdmin();
+    }
+
+    match /marketplacePaymentProofs/{orderId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['orderId', 'buyerId', 'paymentUtr', 'paymentProofUrl', 'createdAt'])
+        && request.resource.data.orderId == orderId
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.paymentUtr is string
+        && request.resource.data.paymentUtr.size() >= 6
+        && request.resource.data.paymentProofUrl is string
+        && request.resource.data.paymentProofUrl.size() > 0
+        && request.resource.data.paymentProofUrl.size() <= 600000
+        && get(orderPath(orderId)).data.buyerId == request.auth.uid
+        && getAfter(orderPath(orderId)).data.status == 'payment_review';
+      allow read: if isAdmin() || (signedIn() && resource.data.buyerId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    match /digitalTextCatalog/{itemId} {
+      allow read: if resource.data.status == 'available'
+        || isAdmin()
+        || (signedIn() && resource.data.sellerId == request.auth.uid);
+      allow create: if verifiedMarketplaceUser()
+        && get(profilePath(request.auth.uid)).data.role in ['seller', 'both']
+        && exists(textPricingPath())
+        && request.resource.data.keys().hasOnly(['sellerId', 'preview', 'status', 'createdAt'])
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.status in ['available', 'under_review']
+        && ((get(textPricingPath()).data.approvalRequired == true
+            && request.resource.data.status == 'under_review')
+          || (get(textPricingPath()).data.approvalRequired != true
+            && request.resource.data.status == 'available'));
+      allow update: if reservesTextItem(itemId)
+        || releasesTextItem()
+        || confirmsPublicTextItem(itemId)
+        || (isAdmin()
+          && resource.data.status in ['available', 'disabled', 'under_review']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['available', 'disabled', 'under_review']);
+      allow delete: if false;
+    }
+
+    match /digitalTextItems/{itemId} {
+      allow get: if isAdmin()
+        || (signedIn() && resource.data.sellerId == request.auth.uid)
+        || (signedIn()
+          && resource.data.status == 'sold'
+          && resource.data.buyerId == request.auth.uid
+          && exists(textOrderPath(resource.data.soldOrderId))
+          && get(textOrderPath(resource.data.soldOrderId)).data.status == 'confirmed');
+      allow list: if isAdmin()
+        || (signedIn() && resource.data.sellerId == request.auth.uid);
+      allow create: if verifiedMarketplaceUser()
+        && get(profilePath(request.auth.uid)).data.role in ['seller', 'both']
+        && exists(textPricingPath())
+        && request.resource.data.keys().hasOnly([
+          'sellerId', 'sellerName', 'mainText', 'relatedText', 'status', 'createdAt'
+        ])
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.mainText is string
+        && request.resource.data.mainText.size() > 0
+        && request.resource.data.mainText.size() <= 20000
+        && request.resource.data.relatedText is string
+        && request.resource.data.relatedText.size() > 0
+        && request.resource.data.relatedText.size() <= 20000
+        && request.resource.data.status in ['available', 'under_review']
+        && ((get(textPricingPath()).data.approvalRequired == true
+            && request.resource.data.status == 'under_review')
+          || (get(textPricingPath()).data.approvalRequired != true
+            && request.resource.data.status == 'available'));
+      allow update: if reservesPrivateTextItem(itemId)
+        || (isAdmin()
+          && resource.data.status == 'reserved'
+          && request.resource.data.status == 'sold'
+          && confirmsTextItem(itemId))
+        || (isAdmin()
+          && resource.data.status in ['available', 'disabled', 'under_review']
+          && request.resource.data.status in ['available', 'disabled', 'under_review']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status', 'reviewedAt', 'reviewedBy'
+          ])
+          && request.resource.data.reviewedBy == request.auth.uid)
+        || (isAdmin()
+          && resource.data.status == 'reserved'
+          && request.resource.data.status == 'available'
+          && releasesTextItem());
+      allow delete: if false;
+    }
+
+    match /digitalTextFingerprints/{fingerprintId} {
+      allow get: if verifiedMarketplaceUser()
+        && get(profilePath(request.auth.uid)).data.role in ['seller', 'both', 'admin'];
+      allow list: if false;
+      allow create: if verifiedMarketplaceUser()
+        && get(profilePath(request.auth.uid)).data.role in ['seller', 'both', 'admin']
+        && request.resource.data.keys().hasOnly(['itemId', 'sellerId', 'field', 'createdAt'])
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.field in ['mainTextHash', 'relatedTextHash', 'pairHash'];
+      allow update, delete: if false;
+    }
+
+    match /digitalTextOrders/{orderId} {
+      allow create: if verifiedMarketplaceUser()
+        && get(profilePath(request.auth.uid)).data.role in ['buyer', 'both', 'admin']
+        && request.resource.data.keys().hasOnly([
+          'buyerId', 'buyerName', 'itemIds', 'itemCount', 'total',
+          'currency', 'status', 'payoutStatus', 'createdAt', 'expiresAt'
+        ])
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.itemIds is list
+        && request.resource.data.itemIds.size() >= 1
+        && request.resource.data.itemIds.size() <= 8
+        && request.resource.data.itemIds.toSet().size() == request.resource.data.itemIds.size()
+        && request.resource.data.itemCount == request.resource.data.itemIds.size()
+        && request.resource.data.total == get(textPricingPath()).data.customerPrice * request.resource.data.itemCount
+        && request.resource.data.currency == 'INR'
+        && request.resource.data.status == 'awaiting_payment'
+        && request.resource.data.payoutStatus == 'pending'
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time
+          + duration.value(get(textPricingPath()).data.reservationMinutes, 'm');
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.buyerId == request.auth.uid);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'paymentVerifiedAt', 'paymentVerifiedBy', 'releasedAt',
+          'releasedBy', 'releaseNote', 'payoutStatus'
+        ])
+        && ((resource.data.status == 'payment_review'
+            && request.resource.data.status == 'confirmed'
+            && request.resource.data.paymentVerifiedBy == request.auth.uid)
+          || (resource.data.status == 'awaiting_payment'
+            && request.resource.data.status == 'expired'
+            && request.time >= resource.data.expiresAt)
+          || (resource.data.status == 'payment_review'
+            && request.resource.data.status == 'rejected')
+          || (resource.data.status == 'confirmed'
+            && request.resource.data.status == 'confirmed'))
+        || (verifiedMarketplaceUser()
+          && resource.data.buyerId == request.auth.uid
+          && resource.data.status == 'awaiting_payment'
+          && request.resource.data.status == 'payment_review'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && existsAfter(/databases/$(database)/documents/digitalTextOrders/$(orderId)/private/paymentProof)
+          && getAfter(/databases/$(database)/documents/digitalTextOrders/$(orderId)/private/paymentProof).data.buyerId == request.auth.uid);
+      allow delete: if false;
+
+      match /items/{itemId} {
+        allow read: if isAdmin()
+          || (signedIn() && (
+            get(textOrderPath(orderId)).data.buyerId == request.auth.uid
+            || resource.data.sellerId == request.auth.uid
+          ));
+        allow create: if verifiedMarketplaceUser()
+          && getAfter(textOrderPath(orderId)).data.buyerId == request.auth.uid
+          && getAfter(textOrderPath(orderId)).data.status == 'awaiting_payment'
+          && itemId in getAfter(textOrderPath(orderId)).data.itemIds
+          && request.resource.data.keys().hasOnly([
+            'itemId', 'sellerId', 'sellerName', 'customerPrice', 'sellerEarning'
+          ])
+          && request.resource.data.itemId == itemId
+          && request.resource.data.sellerId == get(textCatalogPath(itemId)).data.sellerId
+          && request.resource.data.customerPrice == get(textPricingPath()).data.customerPrice
+          && request.resource.data.sellerEarning == get(textPricingPath()).data.sellerEarning
+          && getAfter(textCatalogPath(itemId)).data.status == 'reserved'
+          && getAfter(textCatalogPath(itemId)).data.reservedOrderId == orderId;
+        allow update, delete: if false;
+      }
+
+      match /private/{proofId} {
+        allow get: if isAdmin()
+          || (signedIn() && resource.data.buyerId == request.auth.uid);
+        allow list: if false;
+        allow create: if verifiedMarketplaceUser()
+          && proofId == 'paymentProof'
+          && request.resource.data.keys().hasOnly(['buyerId', 'utr', 'screenshot', 'createdAt'])
+          && request.resource.data.buyerId == request.auth.uid
+          && request.resource.data.utr is string
+          && request.resource.data.utr.size() >= 6
+          && request.resource.data.utr.size() <= 80
+          && request.resource.data.screenshot is string
+          && request.resource.data.screenshot.size() <= 600000
+          && get(textOrderPath(orderId)).data.buyerId == request.auth.uid
+          && getAfter(textOrderPath(orderId)).data.status == 'payment_review';
+        allow update, delete: if false;
+      }
+    }
+
+    match /digitalTextSales/{saleId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.sellerId == request.auth.uid);
+      allow create: if isAdmin()
+        && request.resource.data.itemId == saleId
+        && request.resource.data.payoutStatus == 'pending'
+        && get(textOrderPath(request.resource.data.orderId)).data.status == 'payment_review'
+        && getAfter(textOrderPath(request.resource.data.orderId)).data.status == 'confirmed'
+        && confirmsTextItem(saleId);
+      allow update: if isAdmin()
+        && resource.data.payoutStatus == 'pending'
+        && request.resource.data.payoutStatus == 'paid'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['payoutStatus', 'paidAt', 'paidBy']);
+      allow delete: if false;
+    }
+
+    match /digitalTextSettings/{settingId} {
+      allow get: if settingId == 'pricing';
+      allow list: if false;
+      allow create, update: if isAdmin()
+        && settingId == 'pricing'
+        && request.resource.data.customerPrice is number
+        && request.resource.data.customerPrice > 0
+        && request.resource.data.sellerEarning is number
+        && request.resource.data.sellerEarning >= 0
+        && request.resource.data.sellerEarning <= request.resource.data.customerPrice
+        && request.resource.data.reservationMinutes is int
+        && request.resource.data.reservationMinutes >= 1
+        && request.resource.data.reservationMinutes <= 60
+        && request.resource.data.approvalRequired is bool;
+      allow delete: if false;
+    }
+
+    match /digitalTextRejections/{rejectionId} {
+      allow create: if verifiedMarketplaceUser()
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.reason == 'duplicate_content';
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.sellerId == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    match /digitalTextAuditEvents/{eventId} {
+      allow create: if isAdmin()
+        && request.resource.data.adminId == request.auth.uid;
+      allow get, list: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /apps/{documentId} {
+      allow read: if true;
+      allow write: if isAdmin()
+        || (signedIn() && request.auth.token.email == 'admin@pgdevlabs.com');
+    }
+    match /projects/{documentId} {
+      allow read: if true;
+      allow write: if isAdmin()
+        || (signedIn() && request.auth.token.email == 'admin@pgdevlabs.com');
+    }
+    match /blogPosts/{documentId} {
+      allow read: if true;
+      allow write: if isAdmin()
+        || (signedIn() && request.auth.token.email == 'admin@pgdevlabs.com');
+    }
+    match /team/{documentId} {
+      allow read: if true;
+      allow write: if isAdmin()
+        || (signedIn() && request.auth.token.email == 'admin@pgdevlabs.com');
+    }
+
+    match /users/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    match /rooms/{roomId} {
+      allow read, create: if signedIn();
+      allow update, delete: if signedIn()
+        && resource.data.adminUid == request.auth.uid;
+
+      match /roommates/{roommateId} {
+        allow read, write: if signedIn();
+      }
+
+      match /expenses/{expenseId} {
+        allow read, write: if signedIn();
+      }
+    }
+  }
+}

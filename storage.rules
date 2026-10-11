@@ -1,0 +1,32 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && firestore.exists(/databases/(default)/documents/marketplaceUsers/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/marketplaceUsers/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /marketplace/{uid}/{kind}/{fileName} {
+      allow read: if (kind == 'products' && isSignedIn())
+        || ((kind == 'payment-proofs' || kind == 'payout-qr')
+          && ((isSignedIn() && request.auth.uid == uid) || isAdmin()));
+      allow write: if isSignedIn()
+        && request.auth.uid == uid
+        && kind in ['products', 'payment-proofs', 'payout-qr']
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|webp)')
+        && firestore.exists(/databases/(default)/documents/marketplaceUsers/$(uid))
+        && ((kind == 'products'
+            && firestore.get(/databases/(default)/documents/marketplaceUsers/$(uid)).data.role in ['seller', 'both'])
+          || (kind == 'payment-proofs'
+            && firestore.get(/databases/(default)/documents/marketplaceUsers/$(uid)).data.role in ['buyer', 'both'])
+          || (kind == 'payout-qr'
+            && firestore.get(/databases/(default)/documents/marketplaceUsers/$(uid)).data.role in ['seller', 'both']));
+    }
+  }
+}

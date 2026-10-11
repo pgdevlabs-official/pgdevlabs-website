@@ -9,10 +9,13 @@ import { CommandPalette } from "@/components/shared/CommandPalette";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/apps", label: "Products" },
-  { href: "/projects", label: "Work" },
+  { href: "/apps", label: "Apps" },
+  { href: "/marketplace", label: "Sell / Seller" },
+  { href: "/projects", label: "Development" },
   { href: "/blog", label: "Blog" },
-  { href: "/downloads", label: "Downloads" },
+  { href: "/downloads", label: "Useful Resources" },
+  { href: "/team", label: "Team" },
+  { href: "/contact", label: "Help" },
   { href: "/about", label: "About" },
 ];
 
