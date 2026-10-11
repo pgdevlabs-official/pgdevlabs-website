@@ -9,6 +9,12 @@ service cloud.firestore {
       return /databases/$(database)/documents/marketplaceUsers/$(uid);
     }
 
+    function marketplaceUserNotSuspended(uid) {
+      return exists(profilePath(uid))
+        && (!('marketplaceSuspended' in get(profilePath(uid)).data)
+          || get(profilePath(uid)).data.marketplaceSuspended != true);
+    }
+
     function isConfiguredAdmin() {
       return signedIn()
         && request.auth.token.email == 'prashantraj93345@gmail.com';
@@ -39,8 +45,7 @@ service cloud.firestore {
     function verifiedMarketplaceUser() {
       return signedIn()
         && request.auth.token.email_verified == true
-        && exists(profilePath(request.auth.uid))
-        && get(profilePath(request.auth.uid)).data.marketplaceSuspended != true;
+        && marketplaceUserNotSuspended(request.auth.uid);
     }
 
     function textPricingPath() {
@@ -74,7 +79,7 @@ service cloud.firestore {
         && itemId in order.itemIds
         && orderItem.itemId == itemId
         && orderItem.sellerId == resource.data.sellerId
-        && get(profilePath(resource.data.sellerId)).data.marketplaceSuspended != true
+        && marketplaceUserNotSuspended(resource.data.sellerId)
         && get(profilePath(resource.data.sellerId)).data.role in ['seller', 'both', 'admin']
         && orderItem.customerPrice == pricing.customerPrice
         && orderItem.sellerEarning == pricing.sellerEarning;
@@ -94,7 +99,7 @@ service cloud.firestore {
         && itemId in order.itemIds
         && orderItem.itemId == itemId
         && orderItem.sellerId == resource.data.sellerId
-        && get(profilePath(resource.data.sellerId)).data.marketplaceSuspended != true
+        && marketplaceUserNotSuspended(resource.data.sellerId)
         && get(profilePath(resource.data.sellerId)).data.role in ['seller', 'both', 'admin'];
     }
 
