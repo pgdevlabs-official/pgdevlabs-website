@@ -140,10 +140,13 @@ export function DigitalTextMarketplace() {
     }
     reload(user)
       .then(() => {
-        if (current) setVerified(user.emailVerified);
+        if (!current) return;
+        return user.getIdToken(true).then(() => {
+          if (current) setVerified(user.emailVerified);
+        });
       })
-      .catch((reason: Error) => {
-        if (current) setError(reason.message);
+      .catch((reason: unknown) => {
+        if (current) setError(errorMessage(reason));
       });
     return () => {
       current = false;
@@ -261,6 +264,13 @@ export function DigitalTextMarketplace() {
 
   const checkout = () => {
     void run(async () => {
+      if (!user) throw new Error("Sign in with a buyer account before checkout.");
+      await reload(user);
+      await user.getIdToken(true);
+      if (!user.emailVerified) {
+        setVerified(false);
+        throw new Error("Verify your email, then sign out and sign back in before buying.");
+      }
       const order = await createDigitalTextOrder(selectedIds);
       setActiveOrder(order);
       setSelectedIds([]);
@@ -399,6 +409,7 @@ export function DigitalTextMarketplace() {
             </button>
             <button type="button" disabled={loading} onClick={() => void run(async () => {
               await reload(user);
+              await user.getIdToken(true);
               setVerified(user.emailVerified);
             }, "Email verification status refreshed.")} className="rounded-xl border border-amber-500/40 px-3 py-2 text-sm">
               I verified my email — refresh
