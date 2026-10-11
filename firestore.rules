@@ -148,6 +148,16 @@ service cloud.firestore {
         && orderItem.itemId == itemId;
     }
 
+    function confirmsTextSale(itemId) {
+      let orderId = request.resource.data.orderId;
+      let nextOrder = getAfter(textOrderPath(orderId)).data;
+      let orderItem = get(textOrderItemPath(orderId, itemId)).data;
+      return orderItem.itemId == itemId
+        && itemId in nextOrder.itemIds
+        && request.resource.data.sellerId == orderItem.sellerId
+        && request.resource.data.sellerEarning == orderItem.sellerEarning;
+    }
+
     function reservesOrder(productId) {
       let orderId = request.resource.data.reservedOrderIds[request.resource.data.reservedOrderIds.size() - 1];
       return signedIn()
@@ -495,7 +505,7 @@ service cloud.firestore {
         && request.resource.data.payoutStatus == 'pending'
         && get(textOrderPath(request.resource.data.orderId)).data.status == 'payment_review'
         && getAfter(textOrderPath(request.resource.data.orderId)).data.status == 'confirmed'
-        && confirmsTextItem(saleId);
+        && confirmsTextSale(saleId);
       allow update: if isAdmin()
         && resource.data.payoutStatus == 'pending'
         && request.resource.data.payoutStatus == 'paid'
