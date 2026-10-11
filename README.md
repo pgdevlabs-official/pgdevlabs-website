@@ -133,9 +133,10 @@ the former electronics marketplace user interface. Sellers enter
 Main Text and Related Text only; the administrator controls customer price,
 seller earning, listing approval, and reservation timeout in `/admin`.
 Normalized exact-content fingerprints remain in Firestore after an item is
-sold or disabled. The catalog contains only a generic preview and item ID.
-Full text is in private Firestore documents protected by security rules;
-buyers can read it only after an admin-confirmed order.
+sold or disabled. For available listings, Main Text is published in the public
+catalog so visitors can read it before buying. Related Text remains in private
+Firestore documents protected by security rules and is delivered only after an
+admin-confirmed order.
 
 The digital-text buyer flow keeps the existing UPI QR and manual admin review.
 A marketplace UPI ID can be configured in the admin dashboard's digital-text

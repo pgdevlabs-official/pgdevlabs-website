@@ -229,7 +229,8 @@ export async function createDigitalTextListing(mainValue: string, relatedValue: 
     });
     transaction.set(catalogRef, {
       sellerId: user.uid,
-      preview: `Unique digital text item ${itemRef.id.slice(0, 8)}. Full text is delivered after payment is verified.`,
+      mainText,
+      preview: "Read the public Main Text. Related Text is delivered after payment is verified.",
       status,
       createdAt,
     });
@@ -462,6 +463,7 @@ export type DigitalTextAdminAction =
     }
   | { action: "reviewListing"; itemId: string; approve: boolean }
   | { action: "setListingAvailability"; itemId: string; available: boolean }
+  | { action: "publishMainText"; itemId: string }
   | { action: "confirmPayment"; orderId: string; bankVerifiedPayment: true }
   | {
       action: "rejectPayment" | "releaseExpired";
@@ -514,6 +516,19 @@ export async function digitalTextAdminAction(action: DigitalTextAdminAction) {
     return { success: true };
   }
 
+  if (action.action === "publishMainText") {
+    const privateSnapshot = await getDoc(itemRef(action.itemId));
+    const publicSnapshot = await getDoc(catalogRef(action.itemId));
+    if (!privateSnapshot.exists() || !publicSnapshot.exists()) {
+      throw new Error("Listing not found. Refresh the inventory and try again.");
+    }
+    const mainText = String(privateSnapshot.data().mainText || "");
+    if (!mainText) throw new Error("The listing has no main text to publish.");
+    await updateDoc(catalogRef(action.itemId), { mainText });
+    await audit(action.action, "listing", action.itemId);
+    return { success: true };
+  }
+
   if (action.action === "reviewListing" || action.action === "setListingAvailability") {
     await runTransaction(db, async (transaction) => {
       const privateRef = itemRef(action.itemId);
@@ -534,7 +549,10 @@ export async function digitalTextAdminAction(action: DigitalTextAdminAction) {
         status = action.available ? "available" : "disabled";
       }
       transaction.update(privateRef, { status, reviewedAt: Timestamp.now(), reviewedBy: user.uid });
-      transaction.update(publicRef, { status });
+      transaction.update(publicRef, {
+        status,
+        mainText: privateSnapshot.data().mainText,
+      });
     });
     await audit(action.action, "listing", action.itemId);
     return { success: true };

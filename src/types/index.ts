@@ -136,6 +136,7 @@ export type DigitalTextStatus =
 export interface DigitalTextCatalogItem {
   id: string;
   sellerId: string;
+  mainText?: string;
   preview: string;
   status: DigitalTextStatus;
   createdAt: { seconds: number; nanoseconds: number };

@@ -56,6 +56,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/digitalTextCatalog/$(itemId);
     }
 
+    function textItemPath(itemId) {
+      return /databases/$(database)/documents/digitalTextItems/$(itemId);
+    }
+
     function textOrderPath(orderId) {
       return /databases/$(database)/documents/digitalTextOrders/$(orderId);
     }
@@ -332,8 +336,12 @@ service cloud.firestore {
       allow create: if verifiedMarketplaceUser()
         && get(profilePath(request.auth.uid)).data.role in ['seller', 'both']
         && exists(textPricingPath())
-        && request.resource.data.keys().hasOnly(['sellerId', 'preview', 'status', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['sellerId', 'mainText', 'preview', 'status', 'createdAt'])
         && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.mainText is string
+        && request.resource.data.mainText.size() > 0
+        && request.resource.data.mainText.size() <= 20000
+        && request.resource.data.mainText == getAfter(textItemPath(itemId)).data.mainText
         && request.resource.data.status in ['available', 'under_review']
         && ((get(textPricingPath()).data.approvalRequired == true
             && request.resource.data.status == 'under_review')
@@ -344,8 +352,17 @@ service cloud.firestore {
         || confirmsPublicTextItem(itemId)
         || (isAdmin()
           && resource.data.status in ['available', 'disabled', 'under_review']
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-          && request.resource.data.status in ['available', 'disabled', 'under_review']);
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mainText'])
+          && request.resource.data.mainText is string
+          && request.resource.data.mainText.size() > 0
+          && request.resource.data.mainText.size() <= 20000
+          && request.resource.data.mainText == get(textItemPath(itemId)).data.mainText)
+        || (isAdmin()
+          && resource.data.status in ['available', 'disabled', 'under_review']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'mainText'])
+          && request.resource.data.status in ['available', 'disabled', 'under_review']
+          && request.resource.data.mainText == get(textItemPath(itemId)).data.mainText);
       allow delete: if false;
     }
 

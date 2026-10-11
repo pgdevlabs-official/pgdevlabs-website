@@ -410,7 +410,7 @@ export function DigitalTextMarketplace() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="font-display text-xl font-semibold">Join the marketplace</h2>
-              <p className="mt-1 text-sm text-fg-muted">Browse previews freely. Sign in to buy or sell; verify your email before using either feature.</p>
+              <p className="mt-1 text-sm text-fg-muted">Read each public main text for free. The related text is delivered only after payment is independently verified.</p>
             </div>
             <div className="flex gap-2" role="group" aria-label="Account action">
               <button type="button" onClick={() => setAuthMode("login")} aria-pressed={authMode === "login"} className={`rounded-xl px-3 py-2 text-sm ${authMode === "login" ? "bg-signal text-white" : "border border-border"}`}>Sign in</button>
@@ -505,7 +505,7 @@ export function DigitalTextMarketplace() {
         </div>
         {!catalog?.items.length ? (
           <p className="mt-5 rounded-xl border border-dashed border-border p-5 text-sm text-fg-muted">
-            {catalog ? "No items are available right now." : "Loading safe previews…"}
+            {catalog ? "No items are available right now." : "Loading marketplace items…"}
           </p>
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -525,7 +525,9 @@ export function DigitalTextMarketplace() {
                   />
                   <span className="min-w-0">
                     <span className="block text-xs font-mono-tight text-fg-muted">Item {item.id.slice(0, 8)}</span>
-                    <span className="mt-2 block text-sm leading-5">{item.preview}</span>
+                    <span className="mt-2 block whitespace-pre-wrap break-words text-base font-semibold leading-6">
+                      {item.mainText || "Main text is being updated. Please check back shortly."}
+                    </span>
                     <span className="mt-2 block text-sm font-semibold">{money(catalog.customerPrice)}</span>
                   </span>
                 </label>
@@ -581,7 +583,7 @@ export function DigitalTextMarketplace() {
         <section id="seller-dashboard" className="mt-8 scroll-mt-28 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <form onSubmit={submitListing} className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">
             <h2 className="font-display text-xl font-semibold">Submit a unique item</h2>
-            <p className="mt-1 text-sm text-fg-muted">Price is administrator-controlled. Existing and sold text remains in the duplicate registry. If approval is enabled, buyers see the item only after an admin approves it.</p>
+            <p className="mt-1 text-sm text-fg-muted">The Main Text is public to everyone when the item is available. Related Text stays private and is delivered to the buyer only after payment is verified. Price is administrator-controlled.</p>
             <label className="mt-4 block text-sm">Main Text<textarea className={fieldClass} rows={6} maxLength={MAX_TEXT_LENGTH} value={mainText} onChange={(event) => setMainText(event.target.value)} required /></label>
             <label className="mt-4 block text-sm">Related Text<textarea className={fieldClass} rows={6} maxLength={MAX_TEXT_LENGTH} value={relatedText} onChange={(event) => setRelatedText(event.target.value)} required /></label>
             <p className="mt-2 text-xs text-fg-muted">Each field supports up to 20,000 characters. Text is normalized for Unicode and line endings; comparison is case-sensitive.</p>

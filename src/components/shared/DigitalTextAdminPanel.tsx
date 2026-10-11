@@ -280,6 +280,17 @@ export function DigitalTextAdminPanel() {
                 <span className="rounded-full bg-white/5 px-2 py-1 text-xs">{item.status.replaceAll("_", " ")}</span>
               </div>
               <p className="mt-2 break-all text-xs text-fg-muted">Seller: {item.sellerId}</p>
+              {!item.mainText && item.status !== "sold" && item.status !== "reserved" && (
+                <button type="button" disabled={busy} onClick={() => void runAction({
+                  action: "publishMainText",
+                  itemId: item.id,
+                }, "Main Text published to the public buyer catalog; Related Text remains private.")} className="mt-3 rounded-lg border border-signal/40 px-3 py-2 text-xs text-signal disabled:opacity-50">
+                  Publish Main Text
+                </button>
+              )}
+              {item.mainText && (
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-5">{item.mainText}</p>
+              )}
               {item.status === "under_review" && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button type="button" disabled={busy} onClick={() => void runAction({ action: "reviewListing", itemId: item.id, approve: true }, "Listing approved and now visible in the buyer catalog.")} className="rounded-lg bg-signal px-3 py-2 text-xs text-white">Approve and publish</button>
