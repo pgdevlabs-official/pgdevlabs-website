@@ -236,12 +236,15 @@ export async function createDigitalTextListing(mainValue: string, relatedValue: 
   });
 }
 
-export async function createDigitalTextOrder(itemIds: string[]) {
+export async function createDigitalTextOrder(itemIds: string[], serverTimeOffsetMs: number) {
   const { user, profile } = await requireProfile(["buyer", "both", "admin"]);
   if (!Array.isArray(itemIds) || itemIds.length < 1 || itemIds.length > maximumCartItems) {
     throw new Error(`Choose between 1 and ${maximumCartItems} different items per order.`);
   }
   if (new Set(itemIds).size !== itemIds.length) throw new Error("An item can only be added once to an order.");
+  if (!Number.isFinite(serverTimeOffsetMs) || Math.abs(serverTimeOffsetMs) > 5 * 60 * 1000) {
+    throw new Error("Your device clock is too far from Firebase server time. Check your computer date and time, then try again.");
+  }
   const orderRef = doc(collection(db, collections.orders));
   const pricingRef = doc(db, collections.settings, "pricing");
   const profileRef = doc(db, collections.users, user.uid);
@@ -271,7 +274,8 @@ export async function createDigitalTextOrder(itemIds: string[]) {
       throw new Error("One or more selected items are unavailable. Refresh the listings.");
     }
     const total = Math.round(customerPrice * itemIds.length * 100) / 100;
-    const expiresAt = Date.now() + reservationMinutes * 60 * 1000 - reservationClockSkewAllowanceMs;
+    const expiresAt = Date.now() + serverTimeOffsetMs
+      + reservationMinutes * 60 * 1000 - reservationClockSkewAllowanceMs;
     transaction.set(orderRef, {
       buyerId: user.uid,
       buyerName: profile.name,

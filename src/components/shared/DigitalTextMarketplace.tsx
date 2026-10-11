@@ -27,6 +27,7 @@ import {
   resendMarketplaceEmailVerification,
   sendMarketplacePasswordReset,
   subscribeToProfile,
+  updatePayoutQr,
 } from "@/lib/marketplaceService";
 import type { DigitalTextOrder, MarketplaceProfile } from "@/types";
 
@@ -74,6 +75,7 @@ export function DigitalTextMarketplace() {
   const [catalog, setCatalog] = useState<DigitalTextCatalog | null>(null);
   const [sellerData, setSellerData] = useState<DigitalTextSellerDashboard | null>(null);
   const [sellerItemTexts, setSellerItemTexts] = useState<Record<string, { mainText: string; relatedText: string }>>({});
+  const [payoutFile, setPayoutFile] = useState<File | null>(null);
   const [orders, setOrders] = useState<DigitalTextOrder[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [mainText, setMainText] = useState("");
@@ -262,16 +264,45 @@ export function DigitalTextMarketplace() {
     }, "Your unique text item was submitted.");
   };
 
+  const savePayoutQr = () => {
+    void run(async () => {
+      if (!user || !payoutFile) throw new Error("Choose your UPI QR image first.");
+      const payoutQrUrl = await encodeMarketplaceImage(payoutFile, "payout-qr");
+      await updatePayoutQr(user.uid, payoutQrUrl);
+      setPayoutFile(null);
+      return "Seller payout QR saved. The administrator can load it when processing your payout.";
+    }, "Seller payout QR saved.");
+  };
+
   const checkout = () => {
     void run(async () => {
       if (!user) throw new Error("Sign in with a buyer account before checkout.");
       await reload(user);
+      const tokenRefreshStartedAt = Date.now();
       await user.getIdToken(true);
+      const tokenRefreshCompletedAt = Date.now();
       if (!user.emailVerified) {
         setVerified(false);
         throw new Error("Verify your email, then sign out and sign back in before buying.");
       }
-      const order = await createDigitalTextOrder(selectedIds);
+      const tokenResult = await user.getIdTokenResult();
+      const tokenIssuedAt = Date.parse(tokenResult.issuedAtTime);
+      if (!Number.isFinite(tokenIssuedAt)) {
+        throw new Error("Could not verify Firebase server time. Refresh the page and try again.");
+      }
+      const serverTimeOffsetMs =
+        tokenIssuedAt - (tokenRefreshStartedAt + tokenRefreshCompletedAt) / 2;
+      let order: Awaited<ReturnType<typeof createDigitalTextOrder>>;
+      try {
+        order = await createDigitalTextOrder(selectedIds, serverTimeOffsetMs);
+      } catch (reason) {
+        if (reason instanceof FirebaseError && reason.code === "permission-denied") {
+          throw new Error(
+            "Firebase rejected the reservation before an order or payment QR was created. Ask the administrator to verify the deployed Firestore rules and the buyer and seller marketplace profiles."
+          );
+        }
+        throw reason;
+      }
       setActiveOrder(order);
       setSelectedIds([]);
       setUtr("");
@@ -534,6 +565,40 @@ export function DigitalTextMarketplace() {
           </form>
 
           <div className="space-y-6">
+            <section className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">
+              <h2 className="font-display text-xl font-semibold">Seller payout QR</h2>
+              <p className="mt-2 text-sm text-fg-muted">
+                Save your UPI QR so the administrator can use it to send your earnings. Buyers pay the marketplace QR at checkout; this QR is only for seller payouts.
+              </p>
+              {profile.payoutQrUrl && (
+                <Image
+                  src={profile.payoutQrUrl}
+                  alt="Your saved seller payout QR"
+                  width={192}
+                  height={192}
+                  unoptimized
+                  className="mt-4 rounded-xl bg-white p-2"
+                />
+              )}
+              <label className="mt-4 block text-sm">
+                {profile.payoutQrUrl ? "Upload a replacement QR" : "Upload your UPI QR"}
+                <input
+                  className={fieldClass}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  key={payoutFile?.name ?? "empty"}
+                  onChange={(event) => setPayoutFile(event.currentTarget.files?.[0] ?? null)}
+                />
+              </label>
+              <button
+                type="button"
+                disabled={loading || !payoutFile}
+                onClick={savePayoutQr}
+                className="mt-3 rounded-xl border border-border px-4 py-2.5 text-sm disabled:opacity-50"
+              >
+                {loading ? "Saving…" : "Save payout QR"}
+              </button>
+            </section>
             <section className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">
               <h2 className="font-display text-xl font-semibold">My submitted items</h2>
               {!sellerData?.items.length ? <p className="mt-3 text-sm text-fg-muted">No submitted items yet.</p> : (

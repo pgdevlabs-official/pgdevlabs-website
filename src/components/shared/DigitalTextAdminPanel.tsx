@@ -42,7 +42,7 @@ export function DigitalTextAdminPanel() {
   const [profile, setProfile] = useState<MarketplaceProfile | null>(null);
   const [dashboard, setDashboard] = useState<DigitalTextAdminDashboard | null>(null);
   const [proofs, setProofs] = useState<Record<string, { utr: string; screenshot: string }>>({});
-  const [payoutQrs, setPayoutQrs] = useState<Record<string, string>>({});
+  const [payoutQrs, setPayoutQrs] = useState<Record<string, string | null>>({});
   const [price, setPrice] = useState("");
   const [earning, setEarning] = useState("");
   const [reservationMinutes, setReservationMinutes] = useState("5");
@@ -152,7 +152,7 @@ export function DigitalTextAdminPanel() {
     setBusy(true);
     try {
       const result = await fetchDigitalTextAdminSellerPayoutQr(sellerId);
-      setPayoutQrs((current) => ({ ...current, [sellerId]: result.payoutQrUrl }));
+      setPayoutQrs((current) => ({ ...current, [sellerId]: result.payoutQrUrl || null }));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not load the seller payout QR.");
     } finally {
@@ -332,25 +332,30 @@ export function DigitalTextAdminPanel() {
         <h2 className="font-display text-xl font-semibold">Seller accounts</h2>
         <div className="mt-4 space-y-2">
           {!dashboard?.sellers.length && <p className="text-sm text-fg-muted">No sellers found.</p>}
-          {dashboard?.sellers.map((seller) => (
-            <div key={seller.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 text-sm">
-              <span>{seller.name} · {seller.email} {seller.suspended && <strong className="text-red-700">(suspended)</strong>}</span>
-              <div className="flex items-center gap-3">
-                {payoutQrs[seller.id] ? (
-                  <a href={payoutQrs[seller.id]} target="_blank" rel="noreferrer" className="text-xs text-signal hover:underline">
-                    View payout QR
-                  </a>
-                ) : (
-                  <button type="button" disabled={busy} onClick={() => void loadPayoutQr(seller.id)} className="text-xs text-signal hover:underline">
-                    Load payout QR
+          {dashboard?.sellers.map((seller) => {
+            const payoutQr = payoutQrs[seller.id];
+            return (
+              <div key={seller.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 text-sm">
+                <span>{seller.name} · {seller.email} {seller.suspended && <strong className="text-red-700">(suspended)</strong>}</span>
+                <div className="flex items-center gap-3">
+                  {payoutQr ? (
+                    <a href={payoutQr} target="_blank" rel="noreferrer" className="block rounded-lg bg-white p-1">
+                      <Image src={payoutQr} alt={`${seller.name} payout QR`} width={96} height={96} unoptimized />
+                    </a>
+                  ) : Object.hasOwn(payoutQrs, seller.id) ? (
+                    <span className="text-xs text-fg-muted">Seller has not saved a payout QR.</span>
+                  ) : (
+                    <button type="button" disabled={busy} onClick={() => void loadPayoutQr(seller.id)} className="text-xs text-signal hover:underline">
+                      Load payout QR
+                    </button>
+                  )}
+                  <button type="button" disabled={busy} onClick={() => void runAction({ action: "suspendSeller", sellerId: seller.id, suspended: !seller.suspended }, seller.suspended ? "Seller reactivated." : "Seller suspended.")} className="rounded-lg border border-border px-3 py-2 text-xs">
+                    {seller.suspended ? "Reactivate" : "Suspend"}
                   </button>
-                )}
-                <button type="button" disabled={busy} onClick={() => void runAction({ action: "suspendSeller", sellerId: seller.id, suspended: !seller.suspended }, seller.suspended ? "Seller reactivated." : "Seller suspended.")} className="rounded-lg border border-border px-3 py-2 text-xs">
-                  {seller.suspended ? "Reactivate" : "Suspend"}
-                </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

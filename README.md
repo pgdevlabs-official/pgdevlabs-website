@@ -141,9 +141,12 @@ The digital-text buyer flow keeps the existing UPI QR and manual admin review.
 A payment screenshot or UTR is only a review submission and is never treated
 as payment confirmation. Before confirming, the admin must independently
 verify the amount and reference in the receiving bank/UPI account. Seller
-payouts are also manual; marking a payout paid records an admin action and
-does not transfer money. If a reservation timer ends, items remain reserved
-until an admin checks the bank/UPI account and explicitly releases them after
+payouts are also manual: sellers can save a payout QR from their seller
+dashboard, and admins can load it from the seller list. The buyer checkout QR
+still pays the marketplace UPI account; seller QR images are only for manual
+seller payouts. Marking a payout paid records an admin action and does not
+transfer money. If a reservation timer ends, items remain reserved until an
+admin checks the bank/UPI account and explicitly releases them after
 confirming no payment arrived. This avoids automatically reselling an item
 while a transfer may still be pending.
 
