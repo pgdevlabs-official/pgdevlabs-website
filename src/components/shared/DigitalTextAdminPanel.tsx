@@ -18,6 +18,7 @@ import type { DigitalTextOrder, MarketplaceProfile } from "@/types";
 const inputClass =
   "mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-sm text-fg outline-none focus:border-signal";
 const statuses = ["all", "available", "reserved", "under_review", "sold", "disabled"] as const;
+const configuredMarketplaceUpiId = process.env.NEXT_PUBLIC_MARKETPLACE_UPI_ID || "";
 
 function money(value: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value);
@@ -47,6 +48,7 @@ export function DigitalTextAdminPanel() {
   const [earning, setEarning] = useState("");
   const [reservationMinutes, setReservationMinutes] = useState("5");
   const [approvalRequired, setApprovalRequired] = useState(false);
+  const [marketplaceUpiId, setMarketplaceUpiId] = useState(configuredMarketplaceUpiId);
   const [filter, setFilter] = useState<(typeof statuses)[number]>("all");
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
@@ -74,6 +76,7 @@ export function DigitalTextAdminPanel() {
       setEarning(result.pricing ? String(result.pricing.sellerEarning) : "");
       setReservationMinutes(result.pricing ? String(result.pricing.reservationMinutes ?? 5) : "5");
       setApprovalRequired(result.pricing?.approvalRequired ?? false);
+      setMarketplaceUpiId(result.pricing?.marketplaceUpiId || configuredMarketplaceUpiId);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not load marketplace administration.");
     }
@@ -114,10 +117,15 @@ export function DigitalTextAdminPanel() {
     const customerPrice = Number(price);
     const sellerEarning = Number(earning);
     const timeout = Number(reservationMinutes);
+    const upiId = marketplaceUpiId.trim();
     if (!Number.isFinite(customerPrice) || !Number.isFinite(sellerEarning) ||
         !Number.isInteger(timeout) || timeout < 1 || timeout > 60 ||
         customerPrice <= 0 || sellerEarning < 0 || sellerEarning > customerPrice) {
       setError("Set a positive customer price, seller earning between zero and that price, and a timeout from 1 to 60 minutes.");
+      return;
+    }
+    if (!/^[A-Za-z0-9._-]{2,256}@[A-Za-z0-9.-]{2,64}$/.test(upiId)) {
+      setError("Enter a valid marketplace UPI ID, such as name@bank.");
       return;
     }
     void runAction({
@@ -126,7 +134,8 @@ export function DigitalTextAdminPanel() {
       sellerEarning,
       reservationMinutes: timeout,
       approvalRequired,
-    }, "Pricing saved. Existing orders retain their original snapshots.");
+      marketplaceUpiId: upiId,
+    }, "Pricing and marketplace UPI ID saved. Existing orders retain their original snapshots.");
   };
 
   const confirmPayment = (orderId: string) => {
@@ -206,6 +215,7 @@ export function DigitalTextAdminPanel() {
           <label className="text-sm">Customer price (INR)<input className={inputClass} type="number" min="1" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} required /></label>
           <label className="text-sm">Seller earning per sale (INR)<input className={inputClass} type="number" min="0" step="0.01" value={earning} onChange={(event) => setEarning(event.target.value)} required /></label>
           <label className="text-sm">Reservation timeout (minutes)<input className={inputClass} type="number" min="1" max="60" step="1" value={reservationMinutes} onChange={(event) => setReservationMinutes(event.target.value)} required /></label>
+          <label className="text-sm sm:col-span-2">Marketplace UPI ID<input className={inputClass} type="text" autoComplete="off" value={marketplaceUpiId} onChange={(event) => setMarketplaceUpiId(event.target.value)} placeholder="name@bank" required /><span className="mt-1 block text-xs text-fg-muted">Buyers pay this account. Saving it here updates QR payments without another deployment.</span></label>
         </div>
         <label className="mt-4 flex items-center gap-2 text-sm">
           <input type="checkbox" checked={approvalRequired} onChange={(event) => setApprovalRequired(event.target.checked)} className="accent-signal" />

@@ -31,7 +31,8 @@ import {
 } from "@/lib/marketplaceService";
 import type { DigitalTextOrder, MarketplaceProfile } from "@/types";
 
-const merchantUpiId = process.env.NEXT_PUBLIC_MARKETPLACE_UPI_ID || "";
+const configuredMarketplaceUpiId = process.env.NEXT_PUBLIC_MARKETPLACE_UPI_ID?.trim() || "";
+const upiIdPattern = /^[A-Za-z0-9._-]{2,256}@[A-Za-z0-9.-]{2,64}$/;
 const fieldClass =
   "mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-sm text-fg outline-none focus:border-signal";
 
@@ -81,16 +82,19 @@ export function DigitalTextMarketplace() {
   const [mainText, setMainText] = useState("");
   const [relatedText, setRelatedText] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
-  const [activeOrder, setActiveOrder] = useState<{ id: string; total: number; expiresAt: number } | null>(null);
+  const [activeOrder, setActiveOrder] = useState<{ id: string; total: number; expiresAt: number; paymentUpiId: string } | null>(null);
   const [activeQr, setActiveQr] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [utr, setUtr] = useState("");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [purchasedText, setPurchasedText] = useState<Record<string, { id: string; mainText: string; relatedText: string }[]>>({});
   const [copied, setCopied] = useState("");
+  const [paymentQrError, setPaymentQrError] = useState("");
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const merchantUpiId = catalog?.marketplaceUpiId || configuredMarketplaceUpiId;
+  const canGeneratePaymentQr = upiIdPattern.test(merchantUpiId);
 
   const reloadCatalog = useCallback(async () => {
     try {
@@ -184,26 +188,37 @@ export function DigitalTextMarketplace() {
     if (!activeOrder) {
       setSecondsLeft(0);
       setActiveQr("");
+      setPaymentQrError("");
       return;
     }
     const update = () => setSecondsLeft(Math.max(0, Math.ceil((activeOrder.expiresAt - Date.now()) / 1000)));
     update();
     const interval = window.setInterval(update, 1000);
-    if (!merchantUpiId) {
-      setError("Marketplace UPI ID is not configured. Contact the administrator.");
+    setActiveQr("");
+    setPaymentQrError("");
+    if (!upiIdPattern.test(activeOrder.paymentUpiId)) {
+      setPaymentQrError("Marketplace UPI ID is not configured. Ask the administrator to set it in the admin dashboard.");
       return () => window.clearInterval(interval);
     }
     const payment = new URLSearchParams({
-      pa: merchantUpiId,
+      pa: activeOrder.paymentUpiId,
       pn: "PGDevLabs",
       am: activeOrder.total.toFixed(2),
       cu: "INR",
       tn: `Text order ${activeOrder.id.slice(-8)}`,
     });
+    let current = true;
     QRCode.toDataURL(`upi://pay?${payment.toString()}`, { errorCorrectionLevel: "H", margin: 2, width: 220 })
-      .then(setActiveQr)
-      .catch((reason: Error) => setError(`Could not generate the payment QR: ${reason.message}`));
-    return () => window.clearInterval(interval);
+      .then((qr) => {
+        if (current) setActiveQr(qr);
+      })
+      .catch((reason: Error) => {
+        if (current) setPaymentQrError(`Could not generate the payment QR: ${reason.message}`);
+      });
+    return () => {
+      current = false;
+      window.clearInterval(interval);
+    };
   }, [activeOrder]);
 
   const total = useMemo(() => selectedIds.length * (catalog?.customerPrice ?? 0), [catalog?.customerPrice, selectedIds.length]);
@@ -277,6 +292,10 @@ export function DigitalTextMarketplace() {
   const checkout = () => {
     void run(async () => {
       if (!user) throw new Error("Sign in with a buyer account before checkout.");
+      if (!canGeneratePaymentQr) {
+        throw new Error("Marketplace UPI ID is not configured. Ask the administrator to set it in the admin dashboard before reserving items.");
+      }
+      const paymentUpiId = merchantUpiId;
       await reload(user);
       const tokenRefreshStartedAt = Date.now();
       await user.getIdToken(true);
@@ -303,7 +322,7 @@ export function DigitalTextMarketplace() {
         }
         throw reason;
       }
-      setActiveOrder(order);
+      setActiveOrder({ ...order, paymentUpiId });
       setSelectedIds([]);
       setUtr("");
       setProofFile(null);
@@ -522,9 +541,10 @@ export function DigitalTextMarketplace() {
         {verified && selectedIds.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
             <p className="text-sm">{selectedIds.length} different item(s) · <strong>{money(total)}</strong></p>
-            <button type="button" disabled={loading} onClick={checkout} className="rounded-xl bg-signal px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50">
+            <button type="button" disabled={loading || !canGeneratePaymentQr} onClick={checkout} className="rounded-xl bg-signal px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50">
               {loading ? "Reserving…" : "Reserve and pay"}
             </button>
+            {!canGeneratePaymentQr && <p role="alert" className="w-full text-sm text-red-700">Payment is temporarily unavailable until the administrator configures the marketplace UPI ID.</p>}
           </div>
         )}
       </section>
@@ -535,19 +555,25 @@ export function DigitalTextMarketplace() {
           <p className="mt-1 text-sm text-fg-muted">Total {money(activeOrder.total)} · QR time remaining: {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}</p>
           {secondsLeft > 0 && activeQr ? (
             <Image src={activeQr} alt="UPI payment QR code" width={220} height={220} unoptimized className="mt-4 rounded-xl bg-white p-2" />
+          ) : secondsLeft > 0 ? (
+            <p role="alert" className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700">
+              {paymentQrError || "Generating your payment QR…"}
+            </p>
           ) : (
             <p className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
-              QR timer ended. Do not pay using an old QR. The reservation is held for safe payment reconciliation; contact admin before trying again.
+              QR timer ended. Do not pay using an old QR. The reservation remains held for safe payment reconciliation; contact the administrator before trying again.
             </p>
           )}
-          <form onSubmit={submitProof} className="mt-5 grid gap-3 sm:max-w-xl">
-            <label className="text-sm">UPI reference / UTR<input className={fieldClass} value={utr} onChange={(event) => setUtr(event.target.value)} minLength={6} maxLength={80} required /></label>
-            <label className="text-sm">Payment screenshot (for review only)<input className={fieldClass} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setProofFile(event.currentTarget.files?.[0] ?? null)} required /></label>
-            <p className="text-xs leading-5 text-fg-muted">A screenshot or UTR does not confirm payment. Admin checks the bank/UPI transaction independently. After the QR timer ends, submit proof only if you already paid before it expired.</p>
-            <button disabled={loading || !proofFile || !utr.trim()} className="w-fit rounded-xl border border-border px-4 py-2.5 text-sm font-medium disabled:opacity-50">
-              {loading ? "Submitting…" : "I have paid — send for verification"}
-            </button>
-          </form>
+          {activeQr && (
+            <form onSubmit={submitProof} className="mt-5 grid gap-3 sm:max-w-xl">
+              <label className="text-sm">UPI reference / UTR<input className={fieldClass} value={utr} onChange={(event) => setUtr(event.target.value)} minLength={6} maxLength={80} required /></label>
+              <label className="text-sm">Payment screenshot (for review only)<input className={fieldClass} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setProofFile(event.currentTarget.files?.[0] ?? null)} required /></label>
+              <p className="text-xs leading-5 text-fg-muted">A screenshot or UTR does not confirm payment. Admin checks the bank/UPI transaction independently. After the QR timer ends, submit proof only if you already paid before it expired.</p>
+              <button disabled={loading || !proofFile || !utr.trim()} className="w-fit rounded-xl border border-border px-4 py-2.5 text-sm font-medium disabled:opacity-50">
+                {loading ? "Submitting…" : "I have paid — send for verification"}
+              </button>
+            </form>
+          )}
         </section>
       )}
 

@@ -138,6 +138,11 @@ Full text is in private Firestore documents protected by security rules;
 buyers can read it only after an admin-confirmed order.
 
 The digital-text buyer flow keeps the existing UPI QR and manual admin review.
+A marketplace UPI ID can be configured in the admin dashboard's digital-text
+pricing form; this saved value is used to generate buyer QR codes without
+rebuilding the site. The environment variable remains a fallback for setup.
+Checkout is blocked before a reservation is created when no valid UPI ID is
+available, and payment proof fields are shown only when a QR was generated.
 A payment screenshot or UTR is only a review submission and is never treated
 as payment confirmation. Before confirming, the admin must independently
 verify the amount and reference in the receiving bank/UPI account. Seller

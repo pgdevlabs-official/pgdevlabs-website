@@ -516,7 +516,10 @@ service cloud.firestore {
         && request.resource.data.reservationMinutes is int
         && request.resource.data.reservationMinutes >= 1
         && request.resource.data.reservationMinutes <= 60
-        && request.resource.data.approvalRequired is bool;
+        && request.resource.data.approvalRequired is bool
+        && (!('marketplaceUpiId' in request.resource.data)
+          || (request.resource.data.marketplaceUpiId is string
+            && request.resource.data.marketplaceUpiId.matches('^[A-Za-z0-9._-]{2,256}@[A-Za-z0-9.-]{2,64}$')));
       allow delete: if false;
     }
 

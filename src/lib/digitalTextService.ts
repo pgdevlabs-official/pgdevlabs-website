@@ -42,17 +42,21 @@ const maximumCartItems = 8;
 const screenshotLimit = 600_000;
 const reservationClockSkewAllowanceMs = 5_000;
 const configuredAdminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "prashantraj93345@gmail.com").toLowerCase();
+const configuredMarketplaceUpiId = process.env.NEXT_PUBLIC_MARKETPLACE_UPI_ID?.trim() || "";
+const upiIdPattern = /^[A-Za-z0-9._-]{2,256}@[A-Za-z0-9.-]{2,64}$/;
 
 export interface DigitalTextPricing {
   customerPrice: number;
   sellerEarning: number;
   reservationMinutes: number;
   approvalRequired: boolean;
+  marketplaceUpiId?: string;
   currency: "INR";
 }
 
 export interface DigitalTextCatalog {
   customerPrice: number;
+  marketplaceUpiId: string;
   currency: "INR";
   items: DigitalTextCatalogItem[];
   nextCursor: { createdAt: { seconds: number; nanoseconds: number }; id: string } | null;
@@ -159,6 +163,11 @@ export async function fetchDigitalTextCatalog(
   const items = snapshot.docs.map((entry) => asCatalogItem(entry.id, entry.data()));
   return {
     customerPrice,
+    marketplaceUpiId: String(
+      pricingSnapshot.exists()
+        ? pricingSnapshot.data().marketplaceUpiId || configuredMarketplaceUpiId
+        : configuredMarketplaceUpiId
+    ).trim(),
     currency: "INR",
     items,
     nextCursor: items.length === Math.min(Math.max(pageSize, 1), 50)
@@ -449,6 +458,7 @@ export type DigitalTextAdminAction =
       sellerEarning: number;
       reservationMinutes: number;
       approvalRequired: boolean;
+      marketplaceUpiId: string;
     }
   | { action: "reviewListing"; itemId: string; approve: boolean }
   | { action: "setListingAvailability"; itemId: string; available: boolean }
@@ -481,17 +491,21 @@ export async function digitalTextAdminAction(action: DigitalTextAdminAction) {
   const orderRef = (id: string) => doc(db, collections.orders, id);
 
   if (action.action === "setPricing") {
-    const { customerPrice, sellerEarning, reservationMinutes } = action;
+    const { customerPrice, sellerEarning, reservationMinutes, marketplaceUpiId } = action;
     if (!Number.isFinite(customerPrice) || customerPrice <= 0 || sellerEarning < 0 ||
         sellerEarning > customerPrice || !Number.isInteger(reservationMinutes) ||
         reservationMinutes < 1 || reservationMinutes > 60) {
       throw new Error("Enter valid prices and a reservation timeout from 1 to 60 minutes.");
+    }
+    if (!upiIdPattern.test(marketplaceUpiId.trim())) {
+      throw new Error("Enter a valid marketplace UPI ID, such as name@bank.");
     }
     await setDoc(doc(db, collections.settings, "pricing"), {
       customerPrice,
       sellerEarning,
       reservationMinutes,
       approvalRequired: action.approvalRequired,
+      marketplaceUpiId: marketplaceUpiId.trim(),
       currency: "INR",
       updatedAt: serverTimestamp(),
       updatedBy: user.uid,
