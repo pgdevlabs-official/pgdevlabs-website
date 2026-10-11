@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebaseConfig";
 import {
   digitalTextAdminAction,
@@ -54,6 +55,7 @@ export function DigitalTextAdminPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [orderFeedback, setOrderFeedback] = useState<Record<string, { kind: "info" | "success" | "error"; message: string }>>({});
 
   useEffect(() => {
     if (!auth) return;
@@ -140,7 +142,36 @@ export function DigitalTextAdminPanel() {
 
   const confirmPayment = (orderId: string) => {
     if (!window.confirm("Confirm only after independently matching this amount and UTR in your bank/UPI app. A screenshot alone is not proof. Did you verify the payment was received?")) return;
-    void runAction({ action: "confirmPayment", orderId, bankVerifiedPayment: true }, "Payment verified; unique text was delivered to the buyer.");
+    setBusy(true);
+    setError("");
+    setNotice("");
+    setOrderFeedback((current) => ({
+      ...current,
+      [orderId]: { kind: "info", message: "Verifying payment and delivering the item…" },
+    }));
+    void (async () => {
+      try {
+        await digitalTextAdminAction({ action: "confirmPayment", orderId, bankVerifiedPayment: true });
+        const message = "Payment verified and item delivered to the buyer.";
+        setNotice(message);
+        setOrderFeedback((current) => ({
+          ...current,
+          [orderId]: { kind: "success", message },
+        }));
+        await refresh();
+      } catch (reason) {
+        const message = reason instanceof FirebaseError
+          ? `${reason.code}: ${reason.message}`
+          : reason instanceof Error ? reason.message : "Payment confirmation failed.";
+        setError(message);
+        setOrderFeedback((current) => ({
+          ...current,
+          [orderId]: { kind: "error", message: `Payment was not confirmed: ${message}` },
+        }));
+      } finally {
+        setBusy(false);
+      }
+    })();
   };
 
   const loadPaymentProof = async (orderId: string) => {
@@ -301,11 +332,27 @@ export function DigitalTextAdminPanel() {
                     </div>
                   </div>
                 )}
+                {orderFeedback[order.id] && (
+                  <p
+                    role={orderFeedback[order.id].kind === "error" ? "alert" : "status"}
+                    className={`mt-3 rounded-lg border p-3 text-sm ${
+                      orderFeedback[order.id].kind === "error"
+                        ? "border-red-500/30 bg-red-500/10 text-red-700"
+                        : orderFeedback[order.id].kind === "success"
+                          ? "border-green-500/30 bg-green-500/10 text-green-700"
+                          : "border-signal/30 bg-signal/5 text-fg-muted"
+                    }`}
+                  >
+                    {orderFeedback[order.id].message}
+                  </p>
+                )}
                 <div className="mt-3 flex flex-wrap gap-2">
                   {order.status === "payment_review" && (
                     <>
                       {!proof && <button type="button" disabled={busy} onClick={() => void loadPaymentProof(order.id)} className="rounded-lg border border-border px-3 py-2 text-xs">Load payment proof</button>}
-                      <button type="button" disabled={busy} onClick={() => confirmPayment(order.id)} className="rounded-lg bg-signal px-3 py-2 text-xs text-white">Verify received and confirm</button>
+                      <button type="button" disabled={busy} onClick={() => confirmPayment(order.id)} className="rounded-lg bg-signal px-3 py-2 text-xs text-white">
+                        {orderFeedback[order.id]?.kind === "info" ? "Confirming…" : "Verify received and confirm"}
+                      </button>
                     </>
                   )}
                   {(order.status === "payment_review" || (order.status === "awaiting_payment" && orderIsExpired(order))) && (
