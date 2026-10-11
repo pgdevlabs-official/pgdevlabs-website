@@ -201,13 +201,13 @@ export function DigitalTextMarketplace() {
 
   const total = useMemo(() => selectedIds.length * (catalog?.customerPrice ?? 0), [catalog?.customerPrice, selectedIds.length]);
 
-  const run = async (action: () => Promise<void>, success: string) => {
+  const run = async (action: () => Promise<void | string>, success: string) => {
     setLoading(true);
     setError("");
     setNotice("");
     try {
-      await action();
-      setNotice(success);
+      const actionNotice = await action();
+      setNotice(actionNotice || success);
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
@@ -248,8 +248,12 @@ export function DigitalTextMarketplace() {
       if (result.duplicate) throw new Error("This text matches an existing or previously submitted item.");
       setMainText("");
       setRelatedText("");
-      if (result.status === "under_review") setNotice("Submitted for admin review.");
-      if (result.status === "available") await reloadCatalog();
+      setSellerData(await fetchDigitalTextSellerDashboard());
+      if (result.status === "available") {
+        await reloadCatalog();
+        return "Item is live in the buyer catalog.";
+      }
+      return "Item submitted. It is pending admin approval, so it will not appear in the buyer catalog until approved.";
     }, "Your unique text item was submitted.");
   };
 
@@ -507,7 +511,7 @@ export function DigitalTextMarketplace() {
         <section id="seller-dashboard" className="mt-8 scroll-mt-28 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <form onSubmit={submitListing} className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">
             <h2 className="font-display text-xl font-semibold">Submit a unique item</h2>
-            <p className="mt-1 text-sm text-fg-muted">Price is administrator-controlled. Existing and sold text remains in the duplicate registry.</p>
+            <p className="mt-1 text-sm text-fg-muted">Price is administrator-controlled. Existing and sold text remains in the duplicate registry. If approval is enabled, buyers see the item only after an admin approves it.</p>
             <label className="mt-4 block text-sm">Main Text<textarea className={fieldClass} rows={6} maxLength={MAX_TEXT_LENGTH} value={mainText} onChange={(event) => setMainText(event.target.value)} required /></label>
             <label className="mt-4 block text-sm">Related Text<textarea className={fieldClass} rows={6} maxLength={MAX_TEXT_LENGTH} value={relatedText} onChange={(event) => setRelatedText(event.target.value)} required /></label>
             <p className="mt-2 text-xs text-fg-muted">Each field supports up to 20,000 characters. Text is normalized for Unicode and line endings; comparison is case-sensitive.</p>
@@ -525,7 +529,9 @@ export function DigitalTextMarketplace() {
                     <article key={item.id} className="rounded-xl border border-border p-3">
                       <div className="flex flex-wrap justify-between gap-2 text-sm">
                         <span className="font-mono-tight">Item {item.id.slice(0, 8)}</span>
-                        <span className="rounded-full bg-white/5 px-2 py-1 text-xs">{item.status.replaceAll("_", " ")}</span>
+                        <span className="rounded-full bg-white/5 px-2 py-1 text-xs">
+                          {item.status === "under_review" ? "Waiting for admin approval" : item.status.replaceAll("_", " ")}
+                        </span>
                       </div>
                       {sellerItemTexts[item.id] ? (
                         <div className="mt-3 space-y-2">
@@ -542,6 +548,11 @@ export function DigitalTextMarketplace() {
                     </article>
                   ))}
                 </div>
+              )}
+              {sellerData?.items.some((item) => item.status === "under_review") && (
+                <Link href="/admin#digital-text-inventory" className="mt-3 inline-flex text-sm text-signal hover:underline">
+                  Admin: review pending items
+                </Link>
               )}
             </section>
             <section className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">

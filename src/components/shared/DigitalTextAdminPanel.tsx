@@ -214,8 +214,16 @@ export function DigitalTextAdminPanel() {
         <button disabled={busy} className="mt-4 rounded-xl bg-signal px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50">Save pricing</button>
       </form>
 
-      <section className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">
-        <h2 className="font-display text-xl font-semibold">Unique inventory</h2>
+      <section id="digital-text-inventory" className="scroll-mt-24 rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-xl font-semibold">Unique inventory</h2>
+            <p className="mt-1 text-sm text-fg-muted">
+              {(dashboard?.inventory ?? []).filter((item) => item.status === "under_review").length} item(s) waiting for approval
+            </p>
+          </div>
+          <button type="button" disabled={busy} onClick={() => void refresh()} className="rounded-xl border border-border px-3 py-2 text-sm disabled:opacity-50">Refresh inventory</button>
+        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_220px]">
           <input className={inputClass} placeholder="Search item ID or seller ID" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Search digital-text inventory" />
           <select className={inputClass} value={filter} onChange={(event) => setFilter(event.target.value as (typeof statuses)[number])} aria-label="Filter inventory status">
@@ -232,9 +240,9 @@ export function DigitalTextAdminPanel() {
               </div>
               <p className="mt-2 break-all text-xs text-fg-muted">Seller: {item.sellerId}</p>
               {item.status === "under_review" && (
-                <div className="mt-3 flex gap-2">
-                  <button type="button" disabled={busy} onClick={() => void runAction({ action: "reviewListing", itemId: item.id, approve: true }, "Listing approved.")} className="rounded-lg bg-signal px-3 py-2 text-xs text-white">Approve</button>
-                  <button type="button" disabled={busy} onClick={() => void runAction({ action: "reviewListing", itemId: item.id, approve: false }, "Listing disabled.")} className="rounded-lg border border-border px-3 py-2 text-xs">Reject</button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" disabled={busy} onClick={() => void runAction({ action: "reviewListing", itemId: item.id, approve: true }, "Listing approved and now visible in the buyer catalog.")} className="rounded-lg bg-signal px-3 py-2 text-xs text-white">Approve and publish</button>
+                  <button type="button" disabled={busy} onClick={() => void runAction({ action: "reviewListing", itemId: item.id, approve: false }, "Listing rejected and hidden from buyers.")} className="rounded-lg border border-border px-3 py-2 text-xs">Reject</button>
                 </div>
               )}
               {["available", "disabled"].includes(item.status) && (
