@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signOut,
   type User,
 } from "firebase/auth";
@@ -20,7 +21,9 @@ export function AdminGate({ children }: { children: ReactNode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
 
   useEffect(() => {
     if (!auth) {
@@ -37,6 +40,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setResetMessage("");
     if (!ADMIN_EMAIL) {
       setError("Admin access is disabled until NEXT_PUBLIC_ADMIN_EMAIL is configured.");
       return;
@@ -63,6 +67,39 @@ export function AdminGate({ children }: { children: ReactNode }) {
     } finally {
       setSubmitting(false);
       setPassword("");
+    }
+  }
+
+  async function handlePasswordReset() {
+    setError("");
+    setResetMessage("");
+    if (!ADMIN_EMAIL) {
+      setError("Admin password reset is unavailable until NEXT_PUBLIC_ADMIN_EMAIL is configured.");
+      return;
+    }
+    if (!auth) {
+      setError("Configure Firebase keys before requesting a password reset.");
+      return;
+    }
+    if (email.trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      setError("Enter the configured admin email address to request a reset link.");
+      return;
+    }
+
+    setSendingReset(true);
+    try {
+      await sendPasswordResetEmail(auth, ADMIN_EMAIL);
+      setResetMessage("If this admin account exists, a password reset link has been sent to its email address.");
+    } catch (reason) {
+      if (reason instanceof FirebaseError && reason.code === "auth/too-many-requests") {
+        setError("Too many reset requests. Please wait a while and try again.");
+      } else if (reason instanceof FirebaseError && reason.code === "auth/invalid-email") {
+        setError("The configured admin email address is invalid.");
+      } else {
+        setError(reason instanceof Error ? reason.message : "Could not send a password reset email.");
+      }
+    } finally {
+      setSendingReset(false);
     }
   }
 
@@ -122,10 +159,19 @@ export function AdminGate({ children }: { children: ReactNode }) {
           autoComplete="current-password"
           className="w-full rounded-md border border-border bg-bg-elevated px-3 py-2.5 text-sm outline-none focus-visible:border-signal"
         />
+        {resetMessage && <p role="status" className="text-xs text-circuit">{resetMessage}</p>}
         {error && <p className="text-xs text-danger">{error}</p>}
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Signing in…" : "Sign in"}
         </Button>
+        <button
+          type="button"
+          onClick={handlePasswordReset}
+          disabled={sendingReset || submitting}
+          className="w-full text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline disabled:opacity-50"
+        >
+          {sendingReset ? "Sending reset link…" : "Forgot password?"}
+        </button>
       </form>
     </div>
   );
