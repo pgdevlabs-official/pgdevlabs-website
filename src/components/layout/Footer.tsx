@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AtSign, Code2, Terminal } from "lucide-react";
+import { Code2, Terminal } from "lucide-react";
 
 const columns = [
   {
@@ -44,11 +44,8 @@ export function Footer() {
               A small studio shipping sharp products that feel premium, useful, and worth keeping.
             </p>
             <div className="mt-5 flex gap-3">
-              <a href="#" aria-label="GitHub" className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/5 text-fg-muted transition-colors hover:text-fg">
+              <a href="https://github.com/pgdevlabs-official/pgdevlabs-website" target="_blank" rel="noreferrer" aria-label="PGDevLabs on GitHub" className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/5 text-fg-muted transition-colors hover:text-fg">
                 <Code2 size={15} />
-              </a>
-              <a href="#" aria-label="Twitter" className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/5 text-fg-muted transition-colors hover:text-fg">
-                <AtSign size={15} />
               </a>
             </div>
           </div>

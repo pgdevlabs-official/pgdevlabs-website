@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { siteUrl } from "@/lib/site";
 
 // NOTE: This sandbox has no network access to Google Fonts, so we fall back
 // to a system font stack via CSS variables (see globals.css). When you run
@@ -17,13 +18,18 @@ export const metadata: Metadata = {
   },
   description:
     "PGDevLabs is an independent developer studio building useful apps, thoughtful interfaces, and reliable digital products.",
-  metadataBase: new URL("https://pgdevlabs.example.com"),
+  metadataBase: new URL(siteUrl),
   openGraph: {
     title: "PGDevLabs — Independent developer studio",
     description: "Useful apps, thoughtful interfaces, and reliable digital products.",
     type: "website",
+    url: siteUrl,
   },
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

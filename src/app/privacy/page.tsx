@@ -16,8 +16,8 @@ export default function PrivacyPage() {
         <section>
           <h2 className="mb-2 font-display text-lg font-semibold text-fg">1. Information we collect</h2>
           <p>
-            We collect account information (email, display name) when you sign
-            in via Google Sign-In, app usage data to improve our products, and
+            We collect account information (email and display name) when you
+            create an account, app usage data to improve our products, and
             information you submit voluntarily through contact or review forms.
           </p>
         </section>
@@ -34,7 +34,9 @@ export default function PrivacyPage() {
           <p>
             App data is stored securely using Firebase Firestore with
             production security rules restricting access to authenticated
-            owners of that data.
+            owners of that data. Contact form messages, including the name,
+            email address, and message you provide, are stored in Firestore and
+            can be read only by administrators for support.
           </p>
         </section>
         <section>

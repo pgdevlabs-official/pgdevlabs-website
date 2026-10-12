@@ -4,9 +4,9 @@ import { Package, Download, Star, MessageSquare } from "lucide-react";
 import { getApps, getBlogPosts, getProjects } from "@/lib/dataService";
 import { AdminGate } from "@/components/shared/AdminGate";
 import { AdminStatCard } from "@/components/shared/AdminStatCard";
-import { MiniBarChart } from "@/components/shared/MiniBarChart";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { ContactInbox } from "@/components/shared/ContactInbox";
 import { AdminContentManager } from "@/components/shared/admin/AdminContentManager";
 import { DigitalTextAdminPanel } from "@/components/shared/DigitalTextAdminPanel";
 import { formatCompactNumber } from "@/lib/utils";
@@ -17,15 +17,6 @@ export const metadata: Metadata = {
   title: "Admin",
   robots: { index: false, follow: false },
 };
-
-const downloadTrend = [
-  { label: "Feb", value: 320 },
-  { label: "Mar", value: 540 },
-  { label: "Apr", value: 890 },
-  { label: "May", value: 1200 },
-  { label: "Jun", value: 1850 },
-  { label: "Jul", value: 2400 },
-];
 
 export default async function AdminPage() {
   const [apps, blogPosts, projects] = await Promise.all([
@@ -52,38 +43,32 @@ export default async function AdminPage() {
           <AdminStatCard
             label="Total apps"
             value={String(apps.length)}
-            change="+1"
             icon={Package}
           />
           <AdminStatCard
             label="Total downloads"
             value={formatCompactNumber(totalDownloads)}
-            change="+18%"
             icon={Download}
           />
           <AdminStatCard
             label="Avg. rating"
             value={avgRating.toFixed(1)}
-            change="+0.2"
             icon={Star}
           />
           <AdminStatCard
             label="Reviews"
             value={String(totalReviews)}
-            change="+12"
             icon={MessageSquare}
           />
         </div>
 
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
-          <ErrorBoundary fallbackTitle="Couldn't load download trend">
-            <div className="rounded-lg border border-border bg-bg-elevated p-5">
-              <h2 className="mb-4 font-display text-base font-semibold">
-                Download trend (6mo)
-              </h2>
-              <MiniBarChart data={downloadTrend} />
-            </div>
-          </ErrorBoundary>
+          <div className="rounded-lg border border-border bg-bg-elevated p-5">
+            <h2 className="mb-2 font-display text-base font-semibold">Download trend</h2>
+            <p className="text-sm text-fg-muted">
+              Historical download analytics are not connected yet. Total downloads below reflect the current app records.
+            </p>
+          </div>
 
           <div className="rounded-lg border border-border bg-bg-elevated p-5">
             <h2 className="mb-4 font-display text-base font-semibold">Content overview</h2>
@@ -157,6 +142,8 @@ export default async function AdminPage() {
         <div className="mt-10">
           <DigitalTextAdminPanel />
         </div>
+
+        <ContactInbox />
       </div>
     </AdminGate>
   );
