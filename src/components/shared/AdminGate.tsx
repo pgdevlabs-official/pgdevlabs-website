@@ -49,12 +49,24 @@ export function AdminGate({ children }: { children: ReactNode }) {
       setError("Configure Firebase keys in .env.local before signing in.");
       return;
     }
+    const enteredEmail = email.trim();
+    const enteredPassword = password;
+    if (!enteredEmail) {
+      setError("Enter your email address to sign in.");
+      return;
+    }
+    if (!enteredPassword) {
+      setError("Enter your password to sign in.");
+      return;
+    }
     setSubmitting(true);
     try {
-      const signedInUser = await loginMarketplaceUser(email.trim(), password);
+      const signedInUser = await loginMarketplaceUser(enteredEmail, enteredPassword);
       if (signedInUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
         await signOut(auth);
-        setError("This account isn't authorized for admin access.");
+        setError(
+          `DEBUG: Logged in as "${signedInUser.email}" | ADMIN_EMAIL = "${ADMIN_EMAIL}" | lengths: ${signedInUser.email?.length} vs ${ADMIN_EMAIL.length}`
+        );
       }
     } catch (reason) {
       if (reason instanceof FirebaseError && reason.code === "auth/invalid-credential") {
