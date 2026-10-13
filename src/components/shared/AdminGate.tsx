@@ -81,8 +81,13 @@ export function AdminGate({ children }: { children: ReactNode }) {
       setError("Configure Firebase keys before requesting a password reset.");
       return;
     }
-    if (email.trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-      setError("Enter the configured admin email address to request a reset link.");
+    const enteredEmail = email.trim();
+    if (!enteredEmail) {
+      setError("Enter your email address to request a password reset link.");
+      return;
+    }
+    if (enteredEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      setError("Only the configured admin email address can request a password reset.");
       return;
     }
 
